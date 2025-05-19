@@ -21,6 +21,7 @@ async function main() {
       name: "Super Admin",
       role: Role.ADMIN,
       phone: "0102030405",
+      emailVerified: true,
     },
   });
 

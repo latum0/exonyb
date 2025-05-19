@@ -27,3 +27,9 @@ export const verifyAccessToken = (token: string) =>
 
 export const verifyRefreshToken = (token: string) =>
   jwt.verify(token, refreshSecret as jwt.Secret);
+
+export const generateEmailVerificationToken = (userId: number) => {
+  return jwt.sign({ sub: userId }, accessSecret, {
+    expiresIn: "1h",
+  });
+};

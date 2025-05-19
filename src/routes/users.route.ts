@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { requireAdmin } from "../../middlewares/requireAdmin";
 import { CreateUserDto } from "../dto/user.dto";
-import { createUserController } from "../controllers/users.controller";
+import {
+  createUserController,
+  verifyEmailController,
+} from "../controllers/users.controller";
 import { validateDto } from "../../middlewares/validateDto";
 import { authMiddleware } from "../../middlewares/authMiddleware";
 
@@ -51,7 +54,7 @@ const router = Router();
  *                   type: string
  *                   enum:
  *
- *                 example: ["USERS_READ", "USERS_WRITE"]
+ *                 example: ["AGENT_DE_STOCK", "CONFIRMATEUR"]
  *     responses:
  *       201:
  *         description: Utilisateur créé

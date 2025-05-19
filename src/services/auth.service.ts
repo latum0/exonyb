@@ -1,9 +1,14 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { generateTokens, verifyRefreshToken } from "../../utils/tokens";
-
+import {
+  generateEmailVerificationToken,
+  generateTokens,
+  verifyRefreshToken,
+} from "../../utils/tokens";
+import jwt from "jsonwebtoken";
+import { sendVerificationEmail } from "../../utils/email";
 const prisma = new PrismaClient();
-
+const accessSecret = process.env.JWT_ACCESS_SECRET!;
 export async function loginUser(email: string, password: string) {
   const user = await prisma.users.findUnique({ where: { email } });
 
@@ -20,6 +25,14 @@ export async function loginUser(email: string, password: string) {
 
   if (user.role === Role.MANAGER) {
     basePayload.permissions = user.permissions;
+    if (!user.emailVerified) {
+      const token = generateEmailVerificationToken(user.id);
+      await sendVerificationEmail(user.email, token);
+      return {
+        statusCode: 400,
+        message: "Un email de vérification a été envoyé.",
+      };
+    }
   }
 
   const tokens = generateTokens(basePayload);
@@ -70,4 +83,39 @@ export const refreshAccessToken = async (refreshToken: string) => {
   });
 
   return { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken };
+};
+
+export const verifyEmailService = async (token: string) => {
+  try {
+    const decoded: any = jwt.verify(token, accessSecret);
+
+    const user = await prisma.users.findUnique({
+      where: { id: Number(decoded.sub) },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Utilisateur introuvable",
+        statusCode: 404,
+      };
+    }
+
+    if (user.emailVerified) {
+      return { success: false, message: "Email déjà vérifié", statusCode: 400 };
+    }
+
+    await prisma.users.update({
+      where: { id: Number(decoded.sub) },
+      data: { emailVerified: true },
+    });
+
+    return { statusCode: 200, success: true };
+  } catch (err) {
+    return {
+      success: false,
+      message: "Token invalide ou expiré",
+      statusCode: 400,
+    };
+  }
 };

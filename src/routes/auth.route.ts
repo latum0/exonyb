@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   loginAdminHandler,
   refreshToken,
+  verifyEmailController,
 } from "../controllers/auth.controller";
 import { LoginDto } from "../dto/auth.dto";
 import { validateDto } from "../../middlewares/validateDto";
@@ -89,5 +90,27 @@ router.post(
   //@ts-ignore
   refreshToken
 );
-
+/**
+ * @openapi
+ * /auth/verify-email:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Vérifie l'email à partir du lien reçu par email
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Le token JWT envoyé par email
+ *     responses:
+ *       200:
+ *         description: Email vérifié avec succès
+ *       400:
+ *         description: Token invalide ou manquant
+ *       404:
+ *         description: Utilisateur introuvable
+ */
+router.get("/verify-email", verifyEmailController);
 export default router;

@@ -1,6 +1,8 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { CreateUserDto } from "../dto/user.dto";
+import { generateEmailVerificationToken } from "../../utils/tokens";
+import { sendVerificationEmail } from "../../utils/email";
 
 const prisma = new PrismaClient();
 
@@ -21,7 +23,7 @@ export async function createUser(data: CreateUserDto) {
   if (phoneExists) {
     return {
       statusCode: 409,
-      message: "Phone Déjà  exist",
+      message: "Phone Déjà exist",
     };
   }
 
@@ -38,12 +40,10 @@ export async function createUser(data: CreateUserDto) {
     },
   });
 
+  const token = generateEmailVerificationToken(user.id);
+  await sendVerificationEmail(user.email, token);
   return {
     statusCode: 201,
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    permissions: user.permissions,
+    message: "Utilisateur créé. Un email de vérification a été envoyé.",
   };
 }

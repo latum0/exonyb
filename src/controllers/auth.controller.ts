@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
-import { loginUser, refreshAccessToken } from "../services/auth.service";
+import {
+  loginUser,
+  refreshAccessToken,
+  verifyEmailService,
+} from "../services/auth.service";
 
 export const loginAdminHandler = async (
   req: Request,
@@ -16,7 +20,7 @@ export const loginAdminHandler = async (
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    res.status(200).json({ statusCode: 200, tokens });
+    res.status(tokens.statusCode || 400).json(tokens);
   } catch (err: any) {
     res
       .status(401)
@@ -44,6 +48,21 @@ export const refreshToken = async (req: Request, res: Response) => {
 
     return res.json({ statusCode: 200, accessToken });
   } catch (error: any) {
-    return res.status(401).json({ statusCode: 401, message: error.message });
+    return res
+      .status(401)
+      .json({ statusCode: 401, message: "une erreur serveur est survenue" });
   }
+};
+export const verifyEmailController = async (req: Request, res: Response) => {
+  const { token } = req.query;
+
+  if (!token || typeof token !== "string") {
+    return res
+      .status(400)
+      .json({ statusCode: 400, message: "Token manquant ou invalide" });
+  }
+
+  const result = await verifyEmailService(token);
+
+  res.status(result.statusCode).json(result);
 };
