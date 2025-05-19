@@ -1,10 +1,10 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const existingAdmin = await prisma.admin.findFirst({
+  const existingAdmin = await prisma.users.findFirst({
     where: { email: "lizadjebara2@gmail.com" },
   });
 
@@ -14,11 +14,13 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash("strongPass1!", 10);
 
-  await prisma.admin.create({
+  await prisma.users.create({
     data: {
       email: "lizadjebara2@gmail.com",
       password: hashedPassword,
       name: "Super Admin",
+      role: Role.ADMIN,
+      phone: "0102030405",
     },
   });
 

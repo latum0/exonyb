@@ -18,11 +18,7 @@ const options = {
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    security: [{ bearerAuth: [] }],
   },
   apis: ["./src/routes/*.ts", "./src/dto/*.ts"],
 };

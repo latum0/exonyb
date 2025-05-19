@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { loginAdmin, refreshAccessToken } from "../services/auth.service";
+import { loginUser, refreshAccessToken } from "../services/auth.service";
 
 export const loginAdminHandler = async (
   req: Request,
@@ -7,7 +7,7 @@ export const loginAdminHandler = async (
 ): Promise<void> => {
   const { email, password } = req.body;
   try {
-    const tokens = await loginAdmin(email, password);
+    const tokens = await loginUser(email, password);
     res.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

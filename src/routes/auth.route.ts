@@ -13,7 +13,7 @@ const router = Router();
  * @openapi
  * /auth/login:
  *   post:
- *     summary: Admin login
+ *     summary:  login
  *     tags:
  *       - Auth
  *     requestBody:
