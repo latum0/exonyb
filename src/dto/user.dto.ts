@@ -1,4 +1,4 @@
-import { Permission, Role } from "@prisma/client";
+import { Permission } from "@prisma/client";
 import {
   IsEmail,
   IsEnum,
@@ -34,6 +34,12 @@ export class CreateUserDto {
   })
   phone!: string;
 
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsEnum(Permission, { each: true })
+  permissions!: Permission[];
+}
+export class UpdatePermissionsDto {
   @IsArray()
   @ArrayNotEmpty()
   @IsEnum(Permission, { each: true })
