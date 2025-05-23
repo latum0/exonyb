@@ -1,12 +1,18 @@
 import { Router } from "express";
 
 import {
+  forgotPassword,
+  getProfile,
+  handleChangePassword,
   loginAdminHandler,
   refreshToken,
+  resetPasswordController,
   verifyEmailController,
 } from "../controllers/auth.controller";
-import { LoginDto } from "../dto/auth.dto";
+import { ForgotPasswordDto, LoginDto } from "../dto/auth.dto";
 import { validateDto } from "../../middlewares/validateDto";
+import { authMiddleware } from "../../middlewares/authMiddleware";
+import { swaggerRouteDoc } from "../../utils/waggerHelpers";
 
 const router = Router();
 
@@ -112,5 +118,105 @@ router.post(
  *       404:
  *         description: Utilisateur introuvable
  */
-router.get("/verify-email", verifyEmailController);
+router.get(
+  "/verify-email",
+  //@ts-ignore
+  verifyEmailController
+);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Demander une réinitialisation de mot de passe
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ForgotPasswordDto'
+ *     responses:
+ *       200:
+ *         description: Email envoyé
+ *       404:
+ *         description: Utilisateur non trouvé
+ */
+
+router.post("/forgot-password", validateDto(ForgotPasswordDto), forgotPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Réinitialiser le mot de passe avec le token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Mot de passe réinitialisé
+ */
+router.post("/reset-password", resetPasswordController);
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Changer le mot de passe (à l'interieur de l'application)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ChangePasswordDto'
+ *     responses:
+ *       200:
+ *         description: Mot de passe changé avec succès
+ *       400:
+ *         description: Erreur de validation
+ *       401:
+ *         description: Non autorisé
+ */
+router.post(
+  "/change-password",
+  authMiddleware,
+  //@ts-ignore
+  handleChangePassword
+);
+/**
+ * @swagger
+ * /auth/profile:
+ *   get:
+ *     summary: Récupérer le profil de l'utilisateur connecté
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Données du profil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/UserProfileDto"
+ *       401:
+ *         description: Non autorisé
+ */
+router.get(
+  "/profile",
+  authMiddleware,
+
+  getProfile
+);
 export default router;

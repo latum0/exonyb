@@ -7,6 +7,7 @@ import {
 } from "../../utils/tokens";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../../utils/email";
+import { ChangePasswordDto } from "../dto/auth.dto";
 const prisma = new PrismaClient();
 const accessSecret = process.env.JWT_ACCESS_SECRET!;
 export async function loginUser(email: string, password: string) {
@@ -118,4 +119,87 @@ export const verifyEmailService = async (token: string) => {
       statusCode: 400,
     };
   }
+};
+export const generateResetToken = async (
+  email: string
+): Promise<string | null> => {
+  const user = await prisma.users.findUnique({ where: { email } });
+  if (!user) return null;
+
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_RESET_SECRET!, {
+    expiresIn: "1h",
+  });
+
+  return token;
+};
+export const resetPassword = async (token: string, newPassword: string) => {
+  try {
+    const decoded: any = jwt.verify(token, process.env.JWT_RESET_SECRET!);
+    const userId = decoded.userId;
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.users.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: "Token invalid or expired" };
+  }
+};
+
+export const changePassword = async (
+  userId: number,
+  dto: ChangePasswordDto
+) => {
+  const user = await prisma.users.findUnique({ where: { id: userId } });
+  if (!user) {
+    return {
+      statusCode: 404,
+      message: "Utilisateur introuvable.",
+    };
+  }
+
+  const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+  if (!isMatch) {
+    return {
+      statusCode: 400,
+      message: "Ancien mot de passe incorrect.",
+    };
+  }
+
+  const hashed = await bcrypt.hash(dto.newPassword, 10);
+
+  await prisma.users.update({
+    where: { id: userId },
+    data: { password: hashed },
+  });
+
+  return { statusCode: 200, message: "Mot de passe modifié avec succès" };
+};
+export const getUserProfileService = async (userId: number) => {
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+
+      phone: true,
+      role: true,
+      permissions: true,
+      name: true,
+    },
+  });
+  if (!user) {
+    return {
+      statusCode: 404,
+      message: "Utilisateur introuvable.",
+    };
+  }
+  return {
+    statusCode: 200,
+    data: user,
+  };
 };

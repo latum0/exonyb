@@ -1,9 +1,17 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
+  changePassword,
+  generateResetToken,
+  getUserProfileService,
   loginUser,
   refreshAccessToken,
+  resetPassword,
   verifyEmailService,
 } from "../services/auth.service";
+import { sendResetPasswordEmail } from "../../utils/email";
+import { plainToInstance } from "class-transformer";
+import { ChangePasswordDto } from "../dto/auth.dto";
+import { validateOrReject, ValidationError } from "class-validator";
 
 export const loginAdminHandler = async (
   req: Request,
@@ -65,4 +73,100 @@ export const verifyEmailController = async (req: Request, res: Response) => {
   const result = await verifyEmailService(token);
 
   res.status(result.statusCode).json(result);
+};
+
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+    const token = await generateResetToken(email);
+
+    if (!token) {
+      res
+        .status(404)
+        .json({ statusCode: 404, message: "Utilisateur non trouvé" });
+      return;
+    }
+
+    await sendResetPasswordEmail(email, token);
+    res.status(200).json({ statusCode: 200, message: "un email est envoyé" });
+  } catch (error) {
+    res.status(500).json({ statusCode: 500, message: error });
+    // next(error);
+  }
+};
+
+export const resetPasswordController = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { token, newPassword } = req.body;
+  const result = await resetPassword(token, newPassword);
+
+  if (!result.success) {
+    res.status(400).json({ statusCode: 400, message: result.message });
+    return;
+  }
+
+  res
+    .status(200)
+    .json({ statusCode: 200, message: "Password reset successful" });
+};
+
+export const handleChangePassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const dto = plainToInstance(ChangePasswordDto, req.body);
+    try {
+      await validateOrReject(dto, { whitelist: true });
+    } catch (validationErrors) {
+      const errors = (validationErrors as ValidationError[]).map((err) => ({
+        field: err.property,
+        errors: Object.values(err.constraints || {}),
+      }));
+
+      res.status(400).json({
+        statusCode: 400,
+        message: "Validation failed",
+        errors,
+      });
+      return;
+    }
+
+    if (!req.user || !req.user.sub) {
+      return res
+        .status(401)
+        .json({ statusCode: 401, message: "Utilisateur non found" });
+    }
+    const userId = Number(req.user.sub);
+    const result = await changePassword(userId, dto);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+export const getProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const userId = req?.user?.sub;
+    const profile = await getUserProfileService(userId!);
+
+    if (profile.statusCode === 404) {
+      res.status(404).json(profile);
+      return;
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    next(error);
+  }
 };

@@ -17,10 +17,35 @@ const options = {
           bearerFormat: "JWT",
         },
       },
+      schemas: {
+        ForgotPasswordDto: {
+          type: "object",
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              example: "exemple@mail.com",
+            },
+          },
+          required: ["email"],
+        },
+        ChangePasswordDto: {
+          type: "object",
+          properties: {
+            oldPassword: { type: "string", example: "AncienPass123!" },
+            newPassword: {
+              type: "string",
+              example: "NouveauPass123!",
+              minLength: 8,
+            },
+          },
+          required: ["oldPassword", "newPassword"],
+        },
+      },
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./src/routes/*.ts", "./src/dto/*.ts"],
+  apis: ["./src/routes/*.ts", "./src/dto/*.ts"], // selon où tu mets tes décorateurs Swagger
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
