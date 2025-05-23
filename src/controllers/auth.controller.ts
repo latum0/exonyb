@@ -20,6 +20,10 @@ export const loginAdminHandler = async (
   const { email, password } = req.body;
   try {
     const tokens = await loginUser(email, password);
+    if (tokens.statusCode) {
+      res.status(tokens.statusCode).json({ message: tokens.message });
+    }
+
     res.cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -28,7 +32,7 @@ export const loginAdminHandler = async (
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
-    res.status(tokens.statusCode || 400).json(tokens);
+    res.status(200).json({ accessToken: tokens.accessToken });
   } catch (err: any) {
     res
       .status(401)
