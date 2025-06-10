@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import express, { Application } from "express";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
@@ -6,6 +7,7 @@ import usersRoutes from "./routes/users.route";
 import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
+import clientsRoutes from "./routes/clients.route";
 const app: Application = express();
 
 app.use(express.json());
@@ -19,6 +21,7 @@ app.use(
 );
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
+app.use("/clients", clientsRoutes);
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 

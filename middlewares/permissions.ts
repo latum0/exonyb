@@ -26,8 +26,7 @@ interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-export const checkPermissions =
-  (requiredPermissions: Permission[]) =>
+export const checkPermissions = (requiredPermissions: Permission[]) =>
   (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
