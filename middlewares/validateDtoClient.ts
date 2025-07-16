@@ -1,9 +1,10 @@
+// src/middleware/validate-dto-client.ts
 
 import "reflect-metadata";
 import { plainToInstance } from "class-transformer";
-import { validate, ValidationError } from "class-validator";
+import { validate, ValidationError as ClassValidatorError } from "class-validator";
 import { Request, Response, NextFunction } from "express";
-
+import { ValidationError } from "../utils/errors";
 
 export const validateDtoClient = (DtoClass: any) => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -19,7 +20,7 @@ export const validateDtoClient = (DtoClass: any) => {
 
         if (errors.length > 0) {
 
-            const flatten = (errs: ValidationError[]): string[] =>
+            const flatten = (errs: ClassValidatorError[]): string[] =>
                 errs.reduce<string[]>((acc, err) => {
                     if (err.constraints) {
                         acc.push(...Object.values(err.constraints));
@@ -29,13 +30,11 @@ export const validateDtoClient = (DtoClass: any) => {
                     }
                     return acc;
                 }, []);
-            res.status(400).json({
-                statusCode: 400,
-                message: "Validation failed",
-                errors: flatten(errors),
-            });
 
-            return
+            const details = flatten(errors);
+
+
+            throw new ValidationError("Validation failed", details);
         }
 
 

@@ -12,12 +12,13 @@ import {
   deleteClientController,
 } from "../controllers/clients.controller";
 import { checkPermissions, Permission } from "../../middlewares/permissions";
+import { asyncWrapper } from "../../utils/asyncWrapper";
 
 const router = Router();
 
 /**
  * @swagger
- * /clients/create:
+ * /clients:
  *   post:
  *     summary: Créer un nouveau client
  *     tags:
@@ -29,45 +30,199 @@ const router = Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateClientDto'
+ *             type: object
+ *             required:
+ *               - nom
+ *               - prenom
+ *               - adresse
+ *               - email
+ *               - numeroTelephone
+ *               - statut
+ *             properties:
+ *               nom:
+ *                 type: string
+ *                 example: "Dupont"
+ *               prenom:
+ *                 type: string
+ *                 example: "Jean"
+ *               adresse:
+ *                 type: string
+ *                 example: "123 Rue Exemple, Alger"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "jean.dupont@example.com"
+ *               numeroTelephone:
+ *                 type: string
+ *                 pattern: '^(\+213|0)(5|6|7)[0-9]{8}$'
+ *                 example: "+213612345678"
+ *               commentaires:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - contenu
+ *                     - date
+ *                   properties:
+ *                     contenu:
+ *                       type: string
+ *                       example: "Premier commentaire du client"
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-07-14T10:00:00Z"
+ *                 description: Liste optionnelle de commentaires
+ *               statut:
+ *                 type: string
+ *                 example: "actif"
  *     responses:
- *       201:
- *         description: Client créé
- *       400:
- *         description: Données invalides
- *       403:
- *         description: Accès interdit
+ *       '201':
+ *         description: Client créé avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "c123abc"
+ *                 nom:
+ *                   type: string
+ *                   example: "Dupont"
+ *                 prenom:
+ *                   type: string
+ *                   example: "Jean"
+ *                 adresse:
+ *                   type: string
+ *                   example: "123 Rue Exemple, Alger"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "jean.dupont@example.com"
+ *                 numeroTelephone:
+ *                   type: string
+ *                   example: "+213612345678"
+ *                 commentaires:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       contenu:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                 statut:
+ *                   type: string
+ *                   example: "actif"
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-14T09:00:00Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-14T09:00:00Z"
+ *       '400':
+ *         description: Données du client invalides
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '422':
+ *         description: Erreur de validation (détails en réponse)
  */
+
 router.post(
-  "/create",
+  "/",
   authMiddleware,
-  requireAdmin,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
   validateDtoClient(CreateClientDto),
-  createClientController
+  asyncWrapper(createClientController)
+
 );
 
 /**
  * @swagger
- * /clients/all:
+ * /clients:
  *   get:
- *     summary: Récupérer tous les clients
+ *     summary: Récupérer la liste de tous les clients
  *     tags:
  *       - Clients
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200:
- *         description: Liste des clients
- *       403:
- *         description: Accès interdit
+ *       '200':
+ *         description: Liste des clients récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "c123abc"
+ *                   nom:
+ *                     type: string
+ *                     example: "Dupont"
+ *                   prenom:
+ *                     type: string
+ *                     example: "Jean"
+ *                   adresse:
+ *                     type: string
+ *                     example: "123 Rue Exemple, Alger"
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: "jean.dupont@example.com"
+ *                   numeroTelephone:
+ *                     type: string
+ *                     example: "+213612345678"
+ *                   commentaires:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         contenu:
+ *                           type: string
+ *                           example: "Premier commentaire du client"
+ *                         date:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2025-07-14T10:00:00Z"
+ *                   statut:
+ *                     type: string
+ *                     example: "actif"
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-07-14T09:00:00Z"
+ *                   updatedAt:
+ *                     type: string
+ *                     format: date-time
+ *                     example: "2025-07-14T12:00:00Z"
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
  */
-router.get("/all", authMiddleware, requireAdmin, getAllClientsController);
+
+
+router.get(
+  "/",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(getAllClientsController));
+
 
 /**
  * @swagger
  * /clients/{id}:
  *   get:
- *     summary: Récupérer un client par ID
+ *     summary: Récupérer un client par son ID
  *     tags:
  *       - Clients
  *     security:
@@ -77,21 +232,77 @@ router.get("/all", authMiddleware, requireAdmin, getAllClientsController);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *         description: ID du client
  *     responses:
- *       200:
+ *       '200':
  *         description: Client trouvé
- *       404:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "c123abc"
+ *                 nom:
+ *                   type: string
+ *                   example: "Dupont"
+ *                 prenom:
+ *                   type: string
+ *                   example: "Jean"
+ *                 adresse:
+ *                   type: string
+ *                   example: "123 Rue Exemple, Alger"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "jean.dupont@example.com"
+ *                 numeroTelephone:
+ *                   type: string
+ *                   example: "+213612345678"
+ *                 commentaires:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       contenu:
+ *                         type: string
+ *                         example: "Premier commentaire du client"
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-07-14T10:00:00Z"
+ *                 statut:
+ *                   type: string
+ *                   example: "actif"
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-14T09:00:00Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-14T12:00:00Z"
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
  *         description: Client non trouvé
  */
-router.get("/:id", authMiddleware, requireAdmin, getClientByIdController);
+
+router.get(
+  "/:id",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(getClientByIdController));
 
 /**
  * @swagger
  * /clients/{id}:
  *   patch:
- *     summary: Mettre à jour un client
+ *     summary: Mettre à jour un client existant
  *     tags:
  *       - Clients
  *     security:
@@ -101,34 +312,123 @@ router.get("/:id", authMiddleware, requireAdmin, getClientByIdController);
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID du client
+ *           type: string
+ *         description: ID du client à mettre à jour
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateClientDto'
+ *             type: object
+ *             properties:
+ *               nom:
+ *                 type: string
+ *                 example: "Dupont"
+ *               prenom:
+ *                 type: string
+ *                 example: "Jean"
+ *               adresse:
+ *                 type: string
+ *                 example: "123 Rue Exemple, Alger"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "jean.dupont@example.com"
+ *               numeroTelephone:
+ *                 type: string
+ *                 pattern: '^(\+213|0)(5|6|7)[0-9]{8}$'
+ *                 example: "+213612345678"
+ *               commentaires:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - contenu
+ *                     - date
+ *                   properties:
+ *                     contenu:
+ *                       type: string
+ *                       example: "Commentaire mis à jour"
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-07-15T14:30:00Z"
+ *               statut:
+ *                 type: string
+ *                 example: "inactif"
  *     responses:
- *       200:
- *         description: Client mis à jour
- *       400:
- *         description: Données invalides
- *       404:
+ *       '200':
+ *         description: Client mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   example: "c123abc"
+ *                 nom:
+ *                   type: string
+ *                   example: "Dupont"
+ *                 prenom:
+ *                   type: string
+ *                   example: "Jean"
+ *                 adresse:
+ *                   type: string
+ *                   example: "123 Rue Exemple, Alger"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "jean.dupont@example.com"
+ *                 numeroTelephone:
+ *                   type: string
+ *                   example: "+213612345678"
+ *                 commentaires:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       contenu:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                 statut:
+ *                   type: string
+ *                   example: "inactif"
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-14T09:00:00Z"
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-07-15T14:30:00Z"
+ *       '400':
+ *         description: Données du client invalides
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
  *         description: Client non trouvé
  */
+
 router.patch(
   "/:id",
   authMiddleware,
-  requireAdmin,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
   validateDtoClient(UpdateClientDto),
-  updateClientController
+  asyncWrapper(updateClientController)
+
 );
 
 /**
  * @swagger
  * /clients/{id}:
  *   delete:
- *     summary: Supprimer un client
+ *     summary: Supprimer un client par son ID
  *     tags:
  *       - Clients
  *     security:
@@ -138,15 +438,25 @@ router.patch(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID du client
+ *           type: string
+ *         description: ID du client à supprimer
  *     responses:
- *       200:
- *         description: Client supprimé
- *       404:
+ *       '200':
+ *         description: Client supprimé avec succès
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
  *         description: Client non trouvé
  */
-router.delete("/:id", authMiddleware, requireAdmin, deleteClientController);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
+  asyncWrapper(deleteClientController));
 
 
 export default router;

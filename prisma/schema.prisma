@@ -18,6 +18,11 @@ enum Permission {
   SAV
 }
 
+enum ClientStatut {
+  ACTIVE
+  BLACKLISTED
+}
+
 model Users {
   id            Int      @id @default(autoincrement())
   email         String   @unique
@@ -45,13 +50,13 @@ model Historique {
 }
 
 model Client {
-  idClient        Int    @id @default(autoincrement())
+  idClient        Int          @id @default(autoincrement())
   nom             String
   prenom          String
   adresse         String
-  email           String @unique
-  numeroTelephone String @unique
-  statut          String
+  email           String       @unique
+  numeroTelephone String       @unique
+  statut          ClientStatut @default(ACTIVE)
 
   commentaires Commentaire[]
   commandes    Commande[]
@@ -114,8 +119,8 @@ model Fournisseur {
   nom           String
   adresse       String
   contact       String
-  telephone     String
-  email         String
+  telephone     String @unique
+  email         String @unique
 
   produits Produit[] @relation("FournisseurProduit")
 }
