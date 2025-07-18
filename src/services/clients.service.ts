@@ -16,7 +16,9 @@ export async function createClient(
 
     const { commentaires, ...clientData } = dto;
     const client = await prisma.$transaction(async (tx) => {
-      const newClient = await tx.client.create({ data: clientData });
+      const newClient = await tx.client.create({
+        data: clientData
+      });
 
       if (commentaires?.length) {
         const commentaireInputs: Prisma.CommentaireCreateManyInput[] = commentaires.map(

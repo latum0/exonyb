@@ -10,6 +10,9 @@ import cors from "cors";
 import clientsRoutes from "./routes/clients.route";
 import fournisseursRoutes from "./routes/fournisseur.route"
 import { errorHandler } from "../middlewares/error-handler";
+
+
+
 const app: Application = express();
 
 

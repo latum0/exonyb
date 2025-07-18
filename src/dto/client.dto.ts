@@ -10,6 +10,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { CommentaireDto } from "./commentaire.dto";
+import { ClientStatut } from "@prisma/client";
 
 export class CreateClientDto {
   @IsString() @IsNotEmpty() nom!: string;
@@ -29,7 +30,7 @@ export class CreateClientDto {
   @Type(() => CommentaireDto)
   commentaires?: CommentaireDto[];
 
-  @IsString() @IsNotEmpty() statut!: string;
+  @IsString() @IsNotEmpty() statut!: ClientStatut;
 
   constructor(data?: Partial<CreateClientDto>) {
     if (data) {

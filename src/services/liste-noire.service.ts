@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient, Client } from "@prisma/client";
 import { ensureExists } from "../../utils/helpers";
 import { ClientStatut } from "@prisma/client";
-import { CreateClientDto } from "../dto/client.dto";
+
 
 
 const prisma = new PrismaClient();
@@ -18,18 +18,19 @@ export async function deleteFromBlacklist(id: number): Promise<ServiceResponse<C
     await ensureExists(() => prisma.client.findUnique({ where: { idClient: id } }), "Client")
 
     const unblacklist = await prisma.client.update({ where: { idClient: id }, data: { statut: ClientStatut.ACTIVE } })
-    return { statusCode: 200, data: unblacklist, message: "Le client a été ajouté à la liste noire." }
+    return { statusCode: 200, data: unblacklist, message: "Le client a été retiré de la liste noire." }
 
 }
 
-export async function getAllBlacklistedClients(opts?: { skip?: number, take?: number }): Promise<ServiceResponse<Client[]>> {
+export async function getAllBlacklistedClients(opts?: { skip?: number; take?: number }): Promise<ServiceResponse<Client[]>> {
     const { skip = 0, take = 100 } = opts || {};
     const list = await prisma.client.findMany({
+        where: { statut: ClientStatut.BLACKLISTED },
         skip,
         take,
         orderBy: { nom: "asc" },
     });
-    return { statusCode: 200, data: list }
+    return { statusCode: 200, data: list, message: "Liste des clients en liste noire" };
 }
 
 

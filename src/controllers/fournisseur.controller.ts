@@ -9,9 +9,7 @@ import {
 import { CreateFournisseurDto, UpdateFournisseurDto } from "../dto/fournisseur.dto";
 import { BadRequestError } from "../../utils/errors";
 
-/**
- * Controller functions encapsulate business logic. Errors bubble to asyncWrapper.
- */
+
 export async function createFournisseurController(
     req: Request,
     res: Response,

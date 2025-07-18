@@ -1,4 +1,4 @@
-// src/routes/clients.route.ts
+
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/authMiddleware";
 import { validateDtoClient } from "../../middlewares/validateDtoClient";
@@ -11,10 +11,17 @@ import {
   updateClientController,
   deleteClientController,
 } from "../controllers/clients.controller";
+import { addToBlacklistController, deleteFromBlacklistController, getAllBlacklistedClientsController, getBlacklistedClientsByIdController } from "../controllers/liste-noire.controller";
+
 import { checkPermissions, Permission } from "../../middlewares/permissions";
 import { asyncWrapper } from "../../utils/asyncWrapper";
 
 const router = Router();
+
+
+
+router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsController)
+router.get("/blacklisted/:id", authMiddleware, requireAdmin, getBlacklistedClientsByIdController)
 
 /**
  * @swagger
@@ -457,6 +464,13 @@ router.delete(
   //@ts-ignore
   checkPermissions([Permission.SAV]),
   asyncWrapper(deleteClientController));
+
+router.patch("/addBlacklist/:id", authMiddleware, requireAdmin, addToBlacklistController);
+router.patch("/deleteBlacklist/:id", authMiddleware, requireAdmin, deleteFromBlacklistController);
+
+
+
+
 
 
 export default router;
