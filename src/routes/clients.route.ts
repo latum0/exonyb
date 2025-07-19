@@ -125,7 +125,7 @@ router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsC
  *       '404':
  *         description: Client blacklisté non trouvé
  */
-router.get("/blacklisted/:id", authMiddleware, requireAdmin, asyncWrapper(getBlacklistedClientsByIdController))
+router.get("/blacklist/:id", authMiddleware, requireAdmin, asyncWrapper(getBlacklistedClientsByIdController))
 
 /**
  * @swagger
