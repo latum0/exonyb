@@ -18,10 +18,114 @@ import { asyncWrapper } from "../../utils/asyncWrapper";
 
 const router = Router();
 
+/**
+ * @swagger
+ * /clients/blacklist:
+ *   get:
+ *     summary: Récupérer la liste de tous les clients mis en liste noire
+ *     tags:
+ *       - Blacklist
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       '200':
+ *         description: Liste des clients blacklistés récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   idClient:
+ *                     type: integer
+ *                     example: 8
+ *                   nom:
+ *                     type: string
+ *                     example: "sdaf"
+ *                   prenom:
+ *                     type: string
+ *                     example: "John"
+ *                   adresse:
+ *                     type: string
+ *                     example: "123 Rue Principale"
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: "john.doe@example.com"
+ *                   numeroTelephone:
+ *                     type: string
+ *                     example: "+213700000000"
+ *                   statut:
+ *                     type: string
+ *                     enum:
+ *                       - ACTIVE
+ *                       - BLACKLISTED
+ *                     example: "BLACKLISTED"
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ */
+router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsController);
 
-
-router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsController)
-router.get("/blacklisted/:id", authMiddleware, requireAdmin, getBlacklistedClientsByIdController)
+/**
+ * @swagger
+ * /clients/blacklisted/{id}:
+ *   get:
+ *     summary: Récupérer un client blacklisté par son ID
+ *     tags:
+ *       - Blacklist
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID du client blacklisté
+ *     responses:
+ *       '200':
+ *         description: Client blacklisté trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 idClient:
+ *                   type: integer
+ *                   example: 8
+ *                 nom:
+ *                   type: string
+ *                   example: "sdaf"
+ *                 prenom:
+ *                   type: string
+ *                   example: "John"
+ *                 adresse:
+ *                   type: string
+ *                   example: "123 Rue Principale"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   example: "john.doe@example.com"
+ *                 numeroTelephone:
+ *                   type: string
+ *                   example: "+213700000000"
+ *                 statut:
+ *                   type: string
+ *                   enum:
+ *                     - ACTIVE
+ *                     - BLACKLISTED
+ *                   example: "BLACKLISTED"
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
+ *         description: Client blacklisté non trouvé
+ */
+router.get("/blacklisted/:id", authMiddleware, requireAdmin, asyncWrapper(getBlacklistedClientsByIdController))
 
 /**
  * @swagger
@@ -465,8 +569,68 @@ router.delete(
   checkPermissions([Permission.SAV]),
   asyncWrapper(deleteClientController));
 
-router.patch("/addBlacklist/:id", authMiddleware, requireAdmin, addToBlacklistController);
-router.patch("/deleteBlacklist/:id", authMiddleware, requireAdmin, deleteFromBlacklistController);
+
+/**
+ * @swagger
+ * /clients/addBlacklist/{id}:
+ *   patch:
+ *     summary: Ajouter un client à la liste noire
+ *     tags:
+ *       - Blacklist
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du client à blacklister
+ *     responses:
+ *       '200':
+ *         description: Client ajouté à la liste noire avec succès
+ *       '400':
+ *         description: Requête invalide
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
+ *         description: Client non trouvé
+ */
+
+router.patch("/addBlacklist/:id", authMiddleware, requireAdmin, asyncWrapper(addToBlacklistController));
+
+
+/**
+ * @swagger
+ * /clients/deleteBlacklist/{id}:
+ *   patch:
+ *     summary: Retirer un client de la liste noire
+ *     tags:
+ *       - Blacklist
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID du client à retirer de la liste noire
+ *     responses:
+ *       '200':
+ *         description: Client retiré de la liste noire avec succès
+ *       '400':
+ *         description: Requête invalide
+ *       '401':
+ *         description: Non autorisé (token manquant ou invalide)
+ *       '403':
+ *         description: Accès interdit (permissions insuffisantes)
+ *       '404':
+ *         description: Client blacklisté non trouvé
+ */
+router.patch("/deleteBlacklist/:id", authMiddleware, requireAdmin, asyncWrapper(deleteFromBlacklistController));
 
 
 
