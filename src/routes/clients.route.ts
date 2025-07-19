@@ -71,7 +71,7 @@ router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsC
 
 /**
  * @swagger
- * /clients/blacklisted/{id}:
+ * /clients/blacklist/{id}:
  *   get:
  *     summary: Récupérer un client blacklisté par son ID
  *     tags:
