@@ -11,6 +11,7 @@ import { requireAdmin } from "../../middlewares/requireAdmin";
 import { validateDto } from "../../middlewares/validateDto";
 import { CreateFournisseurDto, UpdateFournisseurDto } from "../dto/fournisseur.dto";
 import { asyncWrapper } from "../../utils/asyncWrapper";
+import { validateDtoClient } from "../../middlewares/validateDtoClient";
 
 const router = Router();
 
@@ -163,7 +164,7 @@ router.patch(
   "/:id",
   authMiddleware,
   requireAdmin,
-  validateDto(UpdateFournisseurDto),
+  validateDtoClient(UpdateFournisseurDto),
   asyncWrapper(updateFournisseurController)
 );
 
