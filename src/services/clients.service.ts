@@ -4,6 +4,7 @@ import { CreateClientDto, UpdateClientDto } from "../dto/client.dto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ConflictError } from "../../utils/errors";
 import { ensureExists, ensureUnique, stripNullish } from "../../utils/helpers";
+import { ClientFilterDto } from "../dto/client-filter.dto";
 
 
 const prisma = new PrismaClient();
@@ -51,23 +52,64 @@ export async function createClient(
 
 
 
-export async function getAllClients(opts?: {
-  skip?: number;
-  take?: number;
-}): Promise<ServiceResponse<Client[]>> {
-  const { skip = 0, take = 100 } = opts || {};
+export async function getAllClients(filter: ClientFilterDto = {}) {
+  const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
+  const page = filter.page ? parseInt(filter.page as any) : 1;
+  const skip = (page - 1) * perPage;
 
-  const list = await prisma.client.findMany({
-    skip,
-    take,
-    orderBy: { nom: "asc" },
-  });
 
-  return {
-    statusCode: 200,
-    data: list,
-  };
+  const where: any = {}
+
+  if (filter.nom) {
+    where.nom = filter.nom
+  }
+  if (filter.prenom) {
+    where.prenom = filter.prenom
+  }
+  if (filter.adresse) {
+    where.adresse = filter.adresse
+  }
+  if (filter.email) {
+    where.email = filter.email
+  }
+  if (filter.numeroTelephone) {
+    where.numeroTelephone = filter.numeroTelephone
+  }
+  if (filter.statut) {
+    where.statut = filter.statut
+  }
+
+  try {
+    const [total, clients] = await Promise.all([
+      prisma.client.count({ where }),
+      prisma.client.findMany({
+        where,
+        skip,
+        take: perPage,
+        orderBy: { nom: "asc" }
+
+      })
+    ])
+    return {
+      statusCode: 200,
+      data: {
+        data: clients,
+        meta: {
+          total,
+          page,
+          perPage,
+          totalPages: Math.ceil(total / perPage),
+        }
+      }
+    }
+
+  } catch (e) {
+    console.error('Error in getAllRetours:', e);
+    throw e;
+  }
+
 }
+
 
 
 export async function getClientById(

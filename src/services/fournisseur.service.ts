@@ -77,7 +77,7 @@ export async function deleteFournisseur(id: number): Promise<ServiceResponse<Fou
         where: { idFournisseur: id },
     });
     return {
-        statusCode: 200,
+        statusCode: 204,
         data: deleted,
     };
 }

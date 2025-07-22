@@ -61,7 +61,7 @@ export class UpdateClientDto {
   @Type(() => CommentaireDto)
   commentaires?: CommentaireDto[];
 
-  @IsOptional() @IsString() statut?: string;
+  @IsOptional() @IsString() statut?: ClientStatut;
 
   constructor(data?: Partial<UpdateClientDto>) {
     if (data) {

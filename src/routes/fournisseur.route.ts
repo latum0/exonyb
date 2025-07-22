@@ -8,7 +8,6 @@ import {
 } from "../controllers/fournisseur.controller";
 import { authMiddleware } from "../../middlewares/authMiddleware";
 import { requireAdmin } from "../../middlewares/requireAdmin";
-import { validateDto } from "../../middlewares/validateDto";
 import { CreateFournisseurDto, UpdateFournisseurDto } from "../dto/fournisseur.dto";
 import { asyncWrapper } from "../../utils/asyncWrapper";
 import { validateDtoClient } from "../../middlewares/validateDtoClient";
@@ -102,7 +101,7 @@ router.post(
   "/",
   authMiddleware,
   requireAdmin,
-  validateDto(CreateFournisseurDto),
+  validateDtoClient(CreateFournisseurDto),
   asyncWrapper(createFournisseurController)
 );
 

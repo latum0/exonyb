@@ -8,6 +8,7 @@ import {
   updateClient,
   deleteClient,
 } from "../services/clients.service";
+import { ClientFilterDto } from "../dto/client-filter.dto";
 
 
 export async function createClientController(
@@ -26,8 +27,20 @@ export async function getAllClientsController(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const result = await getAllClients();
-  res.status(result.statusCode).json(result);
+  const filter = req.query as unknown as ClientFilterDto;
+  const result = await getAllClients(filter);
+  res.status(result.statusCode).json(result.data);
+}
+
+export async function filterClientsController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const filter = req.body as ClientFilterDto;
+
+  const result = await getAllClients(filter);
+  res.status(result.statusCode).json(result.data);
 }
 
 

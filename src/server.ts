@@ -10,6 +10,7 @@ import cors from "cors";
 import clientsRoutes from "./routes/clients.route";
 import fournisseursRoutes from "./routes/fournisseur.route"
 import { errorHandler } from "../middlewares/error-handler";
+import retoursRoutes from "./routes/retour.route"
 
 
 
@@ -29,6 +30,7 @@ app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/clients", clientsRoutes);
 app.use("/fournisseurs", fournisseursRoutes)
+app.use("/retours", retoursRoutes)
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 

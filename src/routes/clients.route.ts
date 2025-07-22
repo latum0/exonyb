@@ -10,11 +10,14 @@ import {
   getClientByIdController,
   updateClientController,
   deleteClientController,
+  filterClientsController,
 } from "../controllers/clients.controller";
 import { addToBlacklistController, deleteFromBlacklistController, getAllBlacklistedClientsController, getBlacklistedClientsByIdController } from "../controllers/liste-noire.controller";
 
 import { checkPermissions, Permission } from "../../middlewares/permissions";
 import { asyncWrapper } from "../../utils/asyncWrapper";
+import { ClientFilterDto } from "../dto/client-filter.dto";
+
 
 const router = Router();
 
@@ -258,63 +261,121 @@ router.post(
  * @swagger
  * /clients:
  *   get:
- *     summary: Récupérer la liste de tous les clients
+ *     summary: Récupérer la liste paginée et filtrée de tous les clients
  *     tags:
  *       - Clients
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Numéro de la page à récupérer
+ *       - in: query
+ *         name: perPage
+ *         schema:
+ *           type: integer
+ *           example: 25
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: nom
+ *         schema:
+ *           type: string
+ *           example: Dupont
+ *         description: Filtrer par nom (partiel)
+ *       - in: query
+ *         name: prenom
+ *         schema:
+ *           type: string
+ *           example: Jean
+ *         description: Filtrer par prénom (partiel)
+ *       - in: query
+ *         name: adresse
+ *         schema:
+ *           type: string
+ *           example: Alger
+ *         description: Filtrer par adresse (partiel)
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *           format: email
+ *           example: jean.dupont@example.com
+ *         description: Filtrer par email (partiel)
+ *       - in: query
+ *         name: numeroTelephone
+ *         schema:
+ *           type: string
+ *           example: "+213612345678"
+ *         description: Filtrer par numéro de téléphone (partiel)
+ *       - in: query
+ *         name: statut
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVE, BLACKLISTED]
+ *           example: ACTIVE
+ *         description: Filtrer par statut
  *     responses:
  *       '200':
  *         description: Liste des clients récupérée avec succès
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     example: "c123abc"
- *                   nom:
- *                     type: string
- *                     example: "Dupont"
- *                   prenom:
- *                     type: string
- *                     example: "Jean"
- *                   adresse:
- *                     type: string
- *                     example: "123 Rue Exemple, Alger"
- *                   email:
- *                     type: string
- *                     format: email
- *                     example: "jean.dupont@example.com"
- *                   numeroTelephone:
- *                     type: string
- *                     example: "+213612345678"
- *                   commentaires:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         contenu:
- *                           type: string
- *                           example: "Premier commentaire du client"
- *                         date:
- *                           type: string
- *                           format: date-time
- *                           example: "2025-07-14T10:00:00Z"
- *                   statut:
- *                     type: string
- *                     example: "actif"
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                     example: "2025-07-14T09:00:00Z"
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                     example: "2025-07-14T12:00:00Z"
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       idClient:
+ *                         type: integer
+ *                         example: 1
+ *                       nom:
+ *                         type: string
+ *                         example: "Dupont"
+ *                       prenom:
+ *                         type: string
+ *                         example: "Jean"
+ *                       adresse:
+ *                         type: string
+ *                         example: "123 Rue Exemple, Alger"
+ *                       email:
+ *                         type: string
+ *                         format: email
+ *                         example: "jean.dupont@example.com"
+ *                       numeroTelephone:
+ *                         type: string
+ *                         example: "+213612345678"
+ *                       statut:
+ *                         type: string
+ *                         enum: [ACTIVE, BLACKLISTED]
+ *                         example: "ACTIVE"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-07-14T09:00:00Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-07-14T12:00:00Z"
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 100
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     perPage:
+ *                       type: integer
+ *                       example: 25
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 4
  *       '401':
  *         description: Non autorisé (token manquant ou invalide)
  *       '403':
@@ -327,6 +388,135 @@ router.get(
   authMiddleware,
   requireAdmin,
   asyncWrapper(getAllClientsController));
+
+
+/**
+* @swagger
+* /clients/filter:
+*   post:
+*     summary: Récupérer la liste des clients correspondant à des filtres
+*     tags:
+*       - Clients
+*     security:
+*       - bearerAuth: []
+*     requestBody:
+*       description: Critères de filtrage et pagination (tous champs optionnels)
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             properties:
+*               page:
+*                 type: integer
+*                 minimum: 1
+*                 example: 1
+*               perPage:
+*                 type: integer
+*                 minimum: 1
+*                 example: 25
+*               nom:
+*                 type: string
+*                 example: "Dupont"
+*               prenom:
+*                 type: string
+*                 example: "Jean"
+*               adresse:
+*                 type: string
+*                 example: "123 Rue Exemple, Alger"
+*               email:
+*                 type: string
+*                 format: email
+*                 example: "jean.dupont@example.com"
+*               numeroTelephone:
+*                 type: string
+*                 pattern: '^(\+213|0)(5|6|7)[0-9]{8}$'
+*                 example: "+213612345678"
+*               statut:
+*                 type: string
+*                 enum:
+*                   - ACTIVE
+*                   - BLACKLISTED
+*                 example: "ACTIVE"
+*     responses:
+*       '200':
+*         description: Liste des clients filtrés récupérée avec succès
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 data:
+*                   type: array
+*                   items:
+*                     type: object
+*                     properties:
+*                       idClient:
+*                         type: integer
+*                         example: 1
+*                       nom:
+*                         type: string
+*                         example: "Dupont"
+*                       prenom:
+*                         type: string
+*                         example: "Jean"
+*                       adresse:
+*                         type: string
+*                         example: "123 Rue Exemple, Alger"
+*                       email:
+*                         type: string
+*                         format: email
+*                         example: "jean.dupont@example.com"
+*                       numeroTelephone:
+*                         type: string
+*                         example: "+213612345678"
+*                       statut:
+*                         type: string
+*                         enum:
+*                           - ACTIVE
+*                           - BLACKLISTED
+*                         example: "ACTIVE"
+*                       createdAt:
+*                         type: string
+*                         format: date-time
+*                         example: "2025-07-14T09:00:00Z"
+*                       updatedAt:
+*                         type: string
+*                         format: date-time
+*                         example: "2025-07-14T12:00:00Z"
+*                 meta:
+*                   type: object
+*                   properties:
+*                     total:
+*                       type: integer
+*                       example: 100
+*                     page:
+*                       type: integer
+*                       example: 1
+*                     perPage:
+*                       type: integer
+*                       example: 25
+*                     totalPages:
+*                       type: integer
+*                       example: 4
+*       '400':
+*         description: Filtre invalide (BadRequest)
+*       '401':
+*         description: Non autorisé (token manquant ou invalide)
+*       '403':
+*         description: Accès interdit (droits insuffisants)
+*/
+
+
+
+router.post(
+  "/filter",
+  authMiddleware,
+  requireAdmin,
+  validateDtoClient(ClientFilterDto)
+  ,
+  asyncWrapper(filterClientsController));
+
 
 
 /**
@@ -587,7 +777,7 @@ router.delete(
  *           type: string
  *         description: ID du client à blacklister
  *     responses:
- *       '200':
+ *       '201':
  *         description: Client ajouté à la liste noire avec succès
  *       '400':
  *         description: Requête invalide
