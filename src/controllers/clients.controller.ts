@@ -28,6 +28,7 @@ export async function getAllClientsController(
   next: NextFunction
 ): Promise<void> {
   const filter = req.query as unknown as ClientFilterDto;
+
   const result = await getAllClients(filter);
   res.status(result.statusCode).json(result.data);
 }

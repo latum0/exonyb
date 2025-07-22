@@ -36,13 +36,13 @@ export async function getAllBlacklistedClients(opts?: { skip?: number; take?: nu
         skip,
         take,
         orderBy: { nom: "asc" },
+        include: { commentaires: true }
     });
     return { statusCode: 200, data: list, message: "List of the blacklist." };
 }
 
 
 export async function getBlacklistedClientById(id: number): Promise<ServiceResponse<Client>> {
-    const blacklistedClient = await ensureExists(() => prisma.client.findUnique({ where: { idClient: id, statut: ClientStatut.BLACKLISTED } }), "Blacklisted client")
+    const blacklistedClient = await ensureExists(() => prisma.client.findUnique({ where: { idClient: id, statut: ClientStatut.BLACKLISTED }, include: { commentaires: true } }), "Blacklisted client")
     return { statusCode: 200, data: blacklistedClient }
-
 }

@@ -1,5 +1,5 @@
 
-import { Client, PrismaClient, Prisma } from "@prisma/client";
+import { Client, PrismaClient, Prisma, ClientStatut } from "@prisma/client";
 import { CreateClientDto, UpdateClientDto } from "../dto/client.dto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { ConflictError } from "../../utils/errors";
@@ -51,33 +51,29 @@ export async function createClient(
 }
 
 
-
 export async function getAllClients(filter: ClientFilterDto = {}) {
   const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
   const page = filter.page ? parseInt(filter.page as any) : 1;
   const skip = (page - 1) * perPage;
 
 
-  const where: any = {}
+  const baseWhere: any = {};
 
-  if (filter.nom) {
-    where.nom = filter.nom
-  }
-  if (filter.prenom) {
-    where.prenom = filter.prenom
-  }
-  if (filter.adresse) {
-    where.adresse = filter.adresse
-  }
-  if (filter.email) {
-    where.email = filter.email
-  }
-  if (filter.numeroTelephone) {
-    where.numeroTelephone = filter.numeroTelephone
-  }
-  if (filter.statut) {
-    where.statut = filter.statut
-  }
+  if (filter.nom) baseWhere.nom = filter.nom;
+  if (filter.prenom) baseWhere.prenom = filter.prenom;
+  if (filter.adresse) baseWhere.adresse = filter.adresse;
+  if (filter.email) baseWhere.email = filter.email;
+  if (filter.numeroTelephone) baseWhere.numeroTelephone = filter.numeroTelephone;
+
+
+  const statutCondition = filter.statut
+    ? filter.statut
+    : { not: ClientStatut.BLACKLISTED };
+
+  const where = {
+    ...baseWhere,
+    statut: statutCondition,
+  };
 
   try {
     const [total, clients] = await Promise.all([
@@ -86,10 +82,11 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
         where,
         skip,
         take: perPage,
-        orderBy: { nom: "asc" }
+        orderBy: { nom: "asc" },
+        include: { commentaires: true },
+      }),
+    ]);
 
-      })
-    ])
     return {
       statusCode: 200,
       data: {
@@ -99,15 +96,13 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
           page,
           perPage,
           totalPages: Math.ceil(total / perPage),
-        }
-      }
-    }
-
+        },
+      },
+    };
   } catch (e) {
-    console.error('Error in getAllRetours:', e);
+    console.error("Error in getAllClients:", e);
     throw e;
   }
-
 }
 
 
@@ -115,7 +110,7 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
 export async function getClientById(
   id: number
 ): Promise<ServiceResponse<Client>> {
-  const find = await prisma.client.findFirst({ where: { idClient: id } })
+  const find = await prisma.client.findFirst({ where: { idClient: id }, include: { commentaires: true } })
   if (!find) {
     return { statusCode: 404, error: "Not found" }
   }
