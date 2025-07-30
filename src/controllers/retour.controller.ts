@@ -7,14 +7,16 @@ import { RetourFilterDto } from "../dto/retour-filter.dto";
 export async function createRetourController(req: Request, res: Response, next: NextFunction): Promise<void> {
 
     const dto = req.body as CreateRetourDto;
-    const result = await createRetour(dto);
-    if (result.error) {
+    const userId = (req.user as { sub: number }).sub;
+
+    const { statusCode, data, error } = await createRetour(dto, userId);
+    if (error) {
         res
-            .status(result.statusCode)
-            .json({ error: result.error });
+            .status(statusCode)
+            .json({ error: error });
         return;
     }
-    res.status(result.statusCode).json(result.data);
+    res.status(statusCode).json(data);
     return;
 
 }
@@ -30,19 +32,19 @@ export async function getAllRetoursController(req: Request, res: Response, next:
         search: raw.search,
         statutRetour: raw.statutRetour,
     };
-    const result = await getAllRetours(filters);
+    const { statusCode, data } = await getAllRetours(filters);
     res
-        .status(result.statusCode)
-        .json(result.data);
+        .status(statusCode)
+        .json(data);
 }
 
 export async function filterRetoursController(req: Request, res: Response, next: NextFunction): Promise<void> {
     const filters = req.body as RetourFilterDto;
 
-    const result = await getAllRetours(filters);
+    const { statusCode, data } = await getAllRetours(filters);
     res
-        .status(result.statusCode)
-        .json(result.data);
+        .status(statusCode)
+        .json(data);
 }
 
 
@@ -62,7 +64,9 @@ export async function updateRetourController(req: Request, res: Response, next: 
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`);
     }
-    const { data, statusCode } = await updateRetour(id, dto)
+    const userId = (req.user as { sub: number }).sub;
+
+    const { data, statusCode } = await updateRetour(id, dto, userId)
     res.status(statusCode).json(data)
 
 }
@@ -74,8 +78,9 @@ export async function deleteRetourController(req: Request, res: Response, next: 
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`);
     }
+    const userId = (req.user as { sub: number }).sub;
 
-    const { statusCode, data, message } = await deleteRetour(id);
+    const { statusCode, data, message } = await deleteRetour(id, userId);
     res.status(statusCode).json({ data, message })
 
 }

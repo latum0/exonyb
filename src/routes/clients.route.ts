@@ -20,7 +20,6 @@ import { ClientFilterDto } from "../dto/client-filter.dto";
 
 
 const router = Router();
-
 /**
  * @swagger
  * /clients/blacklist:
@@ -31,7 +30,7 @@ const router = Router();
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       '200':
+ *       200:
  *         description: Liste des clients blacklistés récupérée avec succès
  *         content:
  *           application/json:
@@ -61,16 +60,31 @@ const router = Router();
  *                     example: "+213700000000"
  *                   statut:
  *                     type: string
- *                     enum:
- *                       - ACTIVE
- *                       - BLACKLISTED
+ *                     enum: [ACTIVE, BLACKLISTED]
  *                     example: "BLACKLISTED"
- *       '401':
+ *                   commentaires:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         contenu:
+ *                           type: string
+ *                           example: "Très bonne cliente, paiement rapide."
+ *                         dateCreated:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2025-07-22T15:46:12.109Z"
+ *       401:
  *         description: Non autorisé (token manquant ou invalide)
- *       '403':
+ *       403:
  *         description: Accès interdit (permissions insuffisantes)
  */
-router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsController);
+router.get(
+  "/blacklist",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
+  getAllBlacklistedClientsController);
 
 /**
  * @swagger
@@ -89,7 +103,7 @@ router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsC
  *           type: integer
  *         description: ID du client blacklisté
  *     responses:
- *       '200':
+ *       200:
  *         description: Client blacklisté trouvé
  *         content:
  *           application/json:
@@ -117,15 +131,25 @@ router.get("/blacklist", authMiddleware, requireAdmin, getAllBlacklistedClientsC
  *                   example: "+213700000000"
  *                 statut:
  *                   type: string
- *                   enum:
- *                     - ACTIVE
- *                     - BLACKLISTED
+ *                   enum: [ACTIVE, BLACKLISTED]
  *                   example: "BLACKLISTED"
- *       '401':
+ *                 commentaires:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       contenu:
+ *                         type: string
+ *                         example: "Très bonne cliente, paiement rapide."
+ *                       dateCreated:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-07-22T15:46:12.109Z"
+ *       401:
  *         description: Non autorisé (token manquant ou invalide)
- *       '403':
+ *       403:
  *         description: Accès interdit (permissions insuffisantes)
- *       '404':
+ *       404:
  *         description: Client blacklisté non trouvé
  */
 router.get("/blacklist/:id", authMiddleware, requireAdmin, asyncWrapper(getBlacklistedClientsByIdController))
@@ -257,6 +281,7 @@ router.post(
 
 );
 
+
 /**
  * @swagger
  * /clients:
@@ -280,36 +305,24 @@ router.post(
  *           example: 25
  *         description: Nombre d'éléments par page
  *       - in: query
- *         name: nom
+ *         name: search
  *         schema:
  *           type: string
- *           example: Dupont
- *         description: Filtrer par nom (partiel)
- *       - in: query
- *         name: prenom
- *         schema:
- *           type: string
- *           example: Jean
- *         description: Filtrer par prénom (partiel)
- *       - in: query
- *         name: adresse
- *         schema:
- *           type: string
- *           example: Alger
- *         description: Filtrer par adresse (partiel)
+ *           example: "Dupont"
+ *         description: Recherche “contains” sur nom, prénom ou adresse
  *       - in: query
  *         name: email
  *         schema:
  *           type: string
  *           format: email
- *           example: jean.dupont@example.com
- *         description: Filtrer par email (partiel)
+ *           example: "jean.dupont@example.com"
+ *         description: Filtrer par email (exact)
  *       - in: query
  *         name: numeroTelephone
  *         schema:
  *           type: string
  *           example: "+213612345678"
- *         description: Filtrer par numéro de téléphone (partiel)
+ *         description: Filtrer par numéro de téléphone (exact)
  *       - in: query
  *         name: statut
  *         schema:
@@ -318,7 +331,7 @@ router.post(
  *           example: ACTIVE
  *         description: Filtrer par statut
  *     responses:
- *       '200':
+ *       200:
  *         description: Liste des clients récupérée avec succès
  *         content:
  *           application/json:
@@ -353,6 +366,18 @@ router.post(
  *                         type: string
  *                         enum: [ACTIVE, BLACKLISTED]
  *                         example: "ACTIVE"
+ *                       commentaires:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             contenu:
+ *                               type: string
+ *                               example: "Commentaire…"
+ *                             dateCreated:
+ *                               type: string
+ *                               format: date-time
+ *                               example: "2025-07-22T15:46:12.109Z"
  *                       createdAt:
  *                         type: string
  *                         format: date-time
@@ -376,9 +401,9 @@ router.post(
  *                     totalPages:
  *                       type: integer
  *                       example: 4
- *       '401':
+ *       401:
  *         description: Non autorisé (token manquant ou invalide)
- *       '403':
+ *       403:
  *         description: Accès interdit (permissions insuffisantes)
  */
 
@@ -518,7 +543,6 @@ router.post(
   asyncWrapper(filterClientsController));
 
 
-
 /**
  * @swagger
  * /clients/{id}:
@@ -533,19 +557,19 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: ID du client
  *     responses:
- *       '200':
+ *       200:
  *         description: Client trouvé
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: string
- *                   example: "c123abc"
+ *                 idClient:
+ *                   type: integer
+ *                   example: 1
  *                 nom:
  *                   type: string
  *                   example: "Dupont"
@@ -562,6 +586,10 @@ router.post(
  *                 numeroTelephone:
  *                   type: string
  *                   example: "+213612345678"
+ *                 statut:
+ *                   type: string
+ *                   enum: [ACTIVE, BLACKLISTED]
+ *                   example: "ACTIVE"
  *                 commentaires:
  *                   type: array
  *                   items:
@@ -570,13 +598,10 @@ router.post(
  *                       contenu:
  *                         type: string
  *                         example: "Premier commentaire du client"
- *                       date:
+ *                       dateCreated:
  *                         type: string
  *                         format: date-time
  *                         example: "2025-07-14T10:00:00Z"
- *                 statut:
- *                   type: string
- *                   example: "actif"
  *                 createdAt:
  *                   type: string
  *                   format: date-time
@@ -585,14 +610,13 @@ router.post(
  *                   type: string
  *                   format: date-time
  *                   example: "2025-07-14T12:00:00Z"
- *       '401':
+ *       401:
  *         description: Non autorisé (token manquant ou invalide)
- *       '403':
+ *       403:
  *         description: Accès interdit (permissions insuffisantes)
- *       '404':
+ *       404:
  *         description: Client non trouvé
  */
-
 router.get(
   "/:id",
   authMiddleware,
@@ -789,7 +813,12 @@ router.delete(
  *         description: Client non trouvé
  */
 
-router.patch("/addBlacklist/:id", authMiddleware, requireAdmin, asyncWrapper(addToBlacklistController));
+router.patch(
+  "/addBlacklist/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
+  asyncWrapper(addToBlacklistController));
 
 
 /**
@@ -820,7 +849,12 @@ router.patch("/addBlacklist/:id", authMiddleware, requireAdmin, asyncWrapper(add
  *       '404':
  *         description: Client blacklisté non trouvé
  */
-router.patch("/deleteBlacklist/:id", authMiddleware, requireAdmin, asyncWrapper(deleteFromBlacklistController));
+router.patch(
+  "/deleteBlacklist/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV]),
+  asyncWrapper(deleteFromBlacklistController));
 
 
 

@@ -6,6 +6,8 @@ import { createRetourController, deleteRetourController, filterRetoursController
 import { asyncWrapper } from "../../utils/asyncWrapper";
 import { RetourFilterDto } from "../dto/retour-filter.dto";
 import { validateDtoClient } from "../../middlewares/validateDtoClient";
+import { checkPermissions } from "../../middlewares/permissions";
+import { Permission } from "@prisma/client";
 
 const router = Router();
 
@@ -67,7 +69,8 @@ const router = Router();
 router.post(
     "/",
     authMiddleware,
-    requireAdmin,
+    //@ts-ignore
+    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
     validateDtoClient(CreateRetourDto),
     asyncWrapper(createRetourController)
 );
@@ -146,7 +149,8 @@ router.post(
 router.get(
     "/",
     authMiddleware,
-    requireAdmin,
+    //@ts-ignore
+    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
     asyncWrapper(getAllRetoursController)
 );
 
@@ -227,7 +231,8 @@ router.post(
 router.get(
     "/:id",
     authMiddleware,
-    requireAdmin,
+    //@ts-ignore
+    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
     asyncWrapper(getretourByIdController)
 );
 
@@ -272,7 +277,8 @@ router.get(
 router.patch(
     "/:id",
     authMiddleware,
-    requireAdmin,
+    //@ts-ignore
+    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
     validateDtoClient(UpdateRetourDto),
     asyncWrapper(updateRetourController)
 );
@@ -306,7 +312,8 @@ router.patch(
 router.delete(
     "/:id",
     authMiddleware,
-    requireAdmin,
+    //@ts-ignore
+    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
     asyncWrapper(deleteRetourController)
 );
 

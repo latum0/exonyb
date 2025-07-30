@@ -1,51 +1,58 @@
-import { PrismaClient, Retour, Prisma } from "@prisma/client";
+import { Retour, Prisma } from "@prisma/client";
 import { ensureExists, ensureUnique, stripNullish } from "../../utils/helpers";
 import { CreateRetourDto, UpdateRetourDto } from "../dto/retour.dto";
 import { RetourFilterDto } from "../dto/retour-filter.dto";
 import { ConflictError } from "../../utils/errors";
+import { createHistoriqueService } from "./historique.service";
 
 
-const prisma = new PrismaClient()
+import prisma from "../prisma";
 
 
-
-
-export async function createRetour(data: CreateRetourDto): Promise<ServiceResponse<Retour>> {
-
+export async function createRetour(
+    data: CreateRetourDto,
+    utilisateurId: number
+): Promise<ServiceResponse<Retour>> {
     await ensureExists(
         () => prisma.commande.findUnique({ where: { idCommande: data.commandeId } }),
-        "Order",
+        "Order"
     );
-    await ensureUnique(() =>
-        prisma.retour.findUnique({
-            where: { commandeId: data.commandeId },
-        }),
-        "Order",
+    await ensureUnique(
+        () =>
+            prisma.retour.findUnique({ where: { commandeId: data.commandeId } }),
+        "Return for this order"
     );
-
 
     try {
-        const retour = await prisma.retour.create({
-            data: {
-                dateRetour: new Date(data.dateRetour),
-                statutRetour: data.statutRetour,
-                raisonRetour: data.raisonRetour,
-                commande: { connect: { idCommande: data.commandeId } }
-            },
-        });
-        return { statusCode: 201, data: retour };
+        const newRetour = await prisma.$transaction(async (tx) => {
+            const created = await tx.retour.create({
+                data: {
+                    dateRetour: new Date(data.dateRetour),
+                    statutRetour: data.statutRetour,
+                    raisonRetour: data.raisonRetour,
+                    commande: { connect: { idCommande: data.commandeId } },
+                },
+            });
 
+            await createHistoriqueService(
+                tx,
+                utilisateurId,
+                `Création du retour pour commande ID=${data.commandeId}`
+            );
+
+            return created;
+        });
+
+        return { statusCode: 201, data: newRetour };
     } catch (err) {
         if (
             err instanceof Prisma.PrismaClientKnownRequestError &&
             err.code === "P2002"
         ) {
-
-
-            throw new ConflictError(`A return for order "${data.commandeId}" already exists.`);
-
+            throw new ConflictError(
+                `Un retour existe déjà pour la commande ID=${data.commandeId}.`
+            );
         }
-
         throw err;
     }
 }
@@ -113,28 +120,72 @@ export async function getRetourById(id: number): Promise<ServiceResponse<Retour>
 }
 
 
-export async function updateRetour(id: number, data: UpdateRetourDto): Promise<ServiceResponse<Retour>> {
-    await ensureExists(() => prisma.retour.findUnique({ where: { idRetour: id } }), "Retour")
+
+export async function updateRetour(
+    id: number,
+    data: UpdateRetourDto,
+    utilisateurId: number
+): Promise<ServiceResponse<Retour>> {
+    await ensureExists(
+        () => prisma.retour.findUnique({ where: { idRetour: id } }),
+        "Retour"
+    );
+
     if (data.commandeId) {
-        await ensureExists(() => prisma.commande.findUnique({ where: { idCommande: data.commandeId } }), "commande")
-        await ensureUnique(() => prisma.retour.findUnique({ where: { commandeId: data.commandeId } }), "Retour")
+        await ensureExists(
+            () => prisma.commande.findUnique({ where: { idCommande: data.commandeId } }),
+            "Commande"
+        );
+        await ensureUnique(
+            () => prisma.retour.findUnique({ where: { commandeId: data.commandeId } }),
+            "Retour"
+        );
     }
+
     const stripData = stripNullish(data);
 
+    const updatedRetour = await prisma.$transaction(async (tx) => {
+        const before = await tx.retour.findUnique({ where: { idRetour: id } });
 
-    const result = await prisma.retour.update({ where: { idRetour: id }, data: { ...stripData } })
-    return { statusCode: 200, data: result }
+        const retour = await tx.retour.update({
+            where: { idRetour: id },
+            data: { ...stripData },
+        });
 
+        await createHistoriqueService(
+            tx,
+            utilisateurId,
+            `Modification du retour ID=${id}`
+        );
+
+        return retour;
+    });
+
+    return { statusCode: 200, data: updatedRetour };
 }
 
 
 
 
 
-export async function deleteRetour(id: number): Promise<ServiceResponse<null>> {
-    await ensureExists(() => prisma.retour.findUnique({ where: { idRetour: id } }), "Retour")
-    await prisma.retour.delete({ where: { idRetour: id } });
-    return { statusCode: 204, data: null }
+export async function deleteRetour(
+    id: number,
+    utilisateurId: number
+): Promise<ServiceResponse<null>> {
+    await ensureExists(
+        () => prisma.retour.findUnique({ where: { idRetour: id } }),
+        "Retour"
+    );
 
+    await prisma.$transaction(async (tx) => {
+        const deleted = await tx.retour.delete({ where: { idRetour: id } });
+        await createHistoriqueService(
+            tx,
+            utilisateurId,
+            `Suppression du retour ID=${deleted.idRetour}`
+        );
+    });
+    return { statusCode: 200, message: "Retour supprimé avec succès." };
 }
+
 

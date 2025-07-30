@@ -16,7 +16,8 @@ export async function createFournisseurController(
     next: NextFunction
 ): Promise<void> {
     const dto = req.body as CreateFournisseurDto;
-    const { data, statusCode } = await createFournisseur(dto);
+    const userId = (req.user as { sub: number }).sub;
+    const { data, statusCode } = await createFournisseur(dto, userId);
     res.status(statusCode).json(data);
 }
 
@@ -29,8 +30,9 @@ export async function updateFournisseurController(
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`);
     }
+    const userId = (req.user as { sub: number }).sub;
     const dto = req.body as UpdateFournisseurDto;
-    const { data, statusCode } = await updateFournisseur(id, dto);
+    const { data, statusCode } = await updateFournisseur(id, dto, userId);
     res.status(statusCode).json(data);
 }
 
@@ -65,6 +67,8 @@ export async function deleteFournisseurController(
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`);
     }
-    await deleteFournisseur(id);
-    res.sendStatus(204);
+    const userId = (req.user as { sub: number }).sub;
+    const { statusCode, message } = await deleteFournisseur(id, userId);
+    res.status(statusCode).json(message);
+    return;
 }

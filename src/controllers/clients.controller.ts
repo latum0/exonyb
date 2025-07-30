@@ -9,18 +9,23 @@ import {
   deleteClient,
 } from "../services/clients.service";
 import { ClientFilterDto } from "../dto/client-filter.dto";
+import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
 
 export async function createClientController(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const dto = req.body as CreateClientDto;
-  const result = await createClient(dto);
-  res.status(result.statusCode).json(result);
-}
 
+  const dto = req.body as CreateClientDto;
+  const userId = (req.user as { sub: number }).sub;
+
+  const { statusCode, data } = await createClient(dto, userId);
+  res.status(statusCode).json({ data });
+
+}
 
 export async function getAllClientsController(
   req: Request,
@@ -29,8 +34,8 @@ export async function getAllClientsController(
 ): Promise<void> {
   const filter = req.query as unknown as ClientFilterDto;
 
-  const result = await getAllClients(filter);
-  res.status(result.statusCode).json(result.data);
+  const { statusCode, data } = await getAllClients(filter);
+  res.status(statusCode).json(data);
 }
 
 export async function filterClientsController(
@@ -40,8 +45,8 @@ export async function filterClientsController(
 ): Promise<void> {
   const filter = req.body as ClientFilterDto;
 
-  const result = await getAllClients(filter);
-  res.status(result.statusCode).json(result.data);
+  const { statusCode, data } = await getAllClients(filter);
+  res.status(statusCode).json(data);
 }
 
 
@@ -55,25 +60,30 @@ export async function getClientByIdController(
     res.status(400).json({ statusCode: 400, message: "Invalid client ID" });
     return;
   }
-  const result = await getClientById(id);
-  res.status(result.statusCode).json(result);
+  const { statusCode, data } = await getClientById(id);
+  res.status(statusCode).json(data);
 }
-
 
 export async function updateClientController(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
+
   const id = Number(req.params.id);
   if (isNaN(id)) {
     res.status(400).json({ statusCode: 400, message: "Invalid client ID" });
     return;
   }
+
+
   const dto = req.body as UpdateClientDto;
-  const result = await updateClient(id, dto);
-  res.status(result.statusCode).json(result);
+  const userId = (req.user as { sub: number }).sub;
+
+  const { statusCode, data } = await updateClient(id, dto, userId);
+  res.status(statusCode).json({ data });
 }
+
 
 
 export async function deleteClientController(
@@ -83,10 +93,14 @@ export async function deleteClientController(
 ): Promise<void> {
   const id = Number(req.params.id);
   if (isNaN(id)) {
-    res.status(400).json({ statusCode: 400, message: "Invalid client ID" });
-    return;
+    res
+      .status(400)
+      .json({ statusCode: 400, message: "Invalid client ID" });
   }
-  const result = await deleteClient(id);
-  res.status(result.statusCode).json(result);
+
+  const userId = (req.user as { sub: number }).sub;
+  const { statusCode, message } = await deleteClient(id, userId);
+
+  res.status(statusCode).json({ message });
 }
 

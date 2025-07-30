@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
+import { IsEmail, IsNotEmpty, IsArray, IsOptional, IsString, Matches } from "class-validator";
 
 export class CreateFournisseurDto {
     @IsString() @IsNotEmpty() nom!: string;
@@ -12,7 +12,12 @@ export class CreateFournisseurDto {
     telephone!: string;
     @IsEmail({}, { message: "Invalid email address" })
     @IsNotEmpty()
+    @IsOptional()
     email!: string;
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    produitIds?: string[];
 
 }
 

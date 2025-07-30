@@ -11,7 +11,9 @@ import clientsRoutes from "./routes/clients.route";
 import fournisseursRoutes from "./routes/fournisseur.route"
 import { errorHandler } from "../middlewares/error-handler";
 import retoursRoutes from "./routes/retour.route"
-
+import historiquesRoutes from "./routes/historique.route";
+import cron from "node-cron";
+import { deleteOldHistoriques } from "./services/historique.service";
 
 
 const app: Application = express();
@@ -31,11 +33,23 @@ app.use("/users", usersRoutes);
 app.use("/clients", clientsRoutes);
 app.use("/fournisseurs", fournisseursRoutes)
 app.use("/retours", retoursRoutes)
+app.use("/historiques", historiquesRoutes);
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 
 app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
+
+cron.schedule("0 0 * * *", async () => {
+  try {
+    const result = await deleteOldHistoriques();
+    if (result.count > 0) {
+      console.log(`Deleted ${result.count} historiques older than 7 days.`);
+    }
+  } catch (err) {
+    console.error("Error running historique cleanup job:", err);
+  }
+});
 
 const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, () => {

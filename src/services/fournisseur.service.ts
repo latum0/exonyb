@@ -1,19 +1,50 @@
-import { Fournisseur, PrismaClient } from "@prisma/client";
+import { Fournisseur } from "@prisma/client";
 import { CreateFournisseurDto, UpdateFournisseurDto } from "../dto/fournisseur.dto";
 import { ensureExists, stripNullish } from "../../utils/helpers";
-import { ConflictError } from "../../utils/errors";
+import { ConflictError, NotFoundError } from "../../utils/errors";
 import { Prisma } from "@prisma/client";
-
-
-const prisma = new PrismaClient()
-
+import { createHistoriqueService } from "./historique.service";
+import prisma from "../prisma";
 export async function createFournisseur(
-    data: CreateFournisseurDto
+    data: CreateFournisseurDto,
+    utilisateurId: number
 ): Promise<ServiceResponse<Fournisseur>> {
     try {
-        const result = await prisma.fournisseur.create({ data: { ...data } });
+        const { produitIds, ...fournisseurData } = data;
+
+        if (produitIds && produitIds.length > 0) {
+            const foundProducts = await prisma.produit.findMany({
+                where: { idProduit: { in: produitIds } },
+                select: { idProduit: true }
+            });
+            const foundIds = foundProducts.map(p => p.idProduit);
+            const missing = produitIds.filter(id => !foundIds.includes(id));
+            if (missing.length > 0) {
+                throw new NotFoundError(
+                    "Produit",
+                    `The following product IDs do not exist: ${missing.join(", ")}`
+                );
+            }
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            const fournisseur = await tx.fournisseur.create({
+                data: {
+                    ...fournisseurData,
+                    produits: produitIds && produitIds.length > 0
+                        ? { connect: produitIds.map(id => ({ idProduit: id })) }
+                        : undefined,
+                },
+            });
+            await createHistoriqueService(
+                tx,
+                utilisateurId,
+                `Création du fournisseur ${fournisseur.nom} (ID=${fournisseur.idFournisseur})`
+            );
+            return fournisseur;
+        });
         return { statusCode: 201, data: result };
-    } catch (err) {
+    } catch (err: any) {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
             const field = Array.isArray(err.meta?.target) ? err.meta.target[0] : err.meta?.target;
             throw new ConflictError("Fournisseur", field as string);
@@ -22,20 +53,35 @@ export async function createFournisseur(
     }
 }
 
-
-
-
-export async function updateFournisseur(id: number, data: UpdateFournisseurDto): Promise<ServiceResponse<Fournisseur>> {
+export async function updateFournisseur(id: number, data: UpdateFournisseurDto, utilisateurId: number): Promise<ServiceResponse<Fournisseur>> {
     await ensureExists(() => prisma.fournisseur.findUnique({ where: { idFournisseur: id } }), "Fournisseur");
+    try {
+        const stripData = stripNullish(data);
+        const updated = await prisma.$transaction(async (tx) => {
+            const fournisseur = await tx.fournisseur.update({ where: { idFournisseur: id }, data: stripData });
+            await createHistoriqueService(
+                tx,
+                utilisateurId,
+                `Modification du fournisseur ${fournisseur.nom} (ID=${fournisseur.idFournisseur})`
+            );
+            return fournisseur;
+        })
 
-    const stripData = stripNullish(data);
-    const updated = await prisma.fournisseur.update({ where: { idFournisseur: id }, data: stripData });
-    return { statusCode: 200, data: updated };
+        return { statusCode: 200, data: updated };
+
+    } catch (err) {
+        if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === "P2002"
+        ) {
+            const field = Array.isArray(err.meta?.target)
+                ? err.meta.target[0]
+                : err.meta?.target;
+            throw new ConflictError("Fournisseur", field as string);
+        }
+        throw err;
+    }
 }
-
-
-
-
 
 export async function getFournisseurById(
     id: number
@@ -47,10 +93,6 @@ export async function getFournisseurById(
 
     return { statusCode: 200, data: find }
 }
-
-
-
-
 
 export async function getAllFournisseur(opts?: {
     skip?: number;
@@ -71,14 +113,35 @@ export async function getAllFournisseur(opts?: {
 }
 
 
-export async function deleteFournisseur(id: number): Promise<ServiceResponse<Fournisseur>> {
-    await ensureExists(() => prisma.fournisseur.findUnique({ where: { idFournisseur: id } }), "Fournisseur");
-    const deleted = await prisma.fournisseur.delete({
-        where: { idFournisseur: id },
+export async function deleteFournisseur(
+    id: number,
+    utilisateurId: number
+): Promise<ServiceResponse<null>> {
+    await ensureExists(
+        () => prisma.fournisseur.findUnique({ where: { idFournisseur: id } }),
+        "Fournisseur"
+    );
+
+    await prisma.$transaction(async (tx) => {
+        await tx.fournisseur.update({
+            where: { idFournisseur: id },
+            data: { produits: { set: [] } },
+        });
+
+        const deleted = await tx.fournisseur.delete({
+            where: { idFournisseur: id },
+        });
+
+        await createHistoriqueService(
+            tx,
+            utilisateurId,
+            `Suppression du fournisseur ${deleted.nom} (ID=${deleted.idFournisseur})`
+        );
     });
+
     return {
-        statusCode: 204,
-        data: deleted,
+        statusCode: 200,
+        message: "Fournisseur supprimé avec succès.",
     };
 }
 

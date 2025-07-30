@@ -9,7 +9,8 @@ export async function addToBlacklistController(req: Request, res: Response, next
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`)
     }
-    const { data, statusCode, message } = await addToBlacklist(id);
+    const userId = (req.user as { sub: number }).sub;
+    const { data, statusCode, message } = await addToBlacklist(id, userId);
     res.status(statusCode).json({ data, message })
 }
 
@@ -19,8 +20,9 @@ export async function deleteFromBlacklistController(req: Request, res: Response,
     if (Number.isNaN(id)) {
         throw new BadRequestError(`Invalid id parameter: "${req.params.id}"`)
     }
+    const userId = (req.user as { sub: number }).sub;
 
-    const { data, statusCode, message } = await deleteFromBlacklist(id)
+    const { data, statusCode, message } = await deleteFromBlacklist(id, userId)
     res.status(statusCode).json({ data, message })
 }
 

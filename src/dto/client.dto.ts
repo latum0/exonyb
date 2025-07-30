@@ -16,7 +16,7 @@ export class CreateClientDto {
   @IsString() @IsNotEmpty() nom!: string;
   @IsString() @IsNotEmpty() prenom!: string;
   @IsString() @IsNotEmpty() adresse!: string;
-  @IsEmail({}, { message: "Invalid email adderss" }) email!: string;
+  @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email!: string;
   @IsString() @IsNotEmpty()
   @Matches(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
     message: "Numéro de téléphone algérien invalide",
