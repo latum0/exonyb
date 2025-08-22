@@ -1,4 +1,3 @@
-
 import { Client, Prisma, ClientStatut } from "@prisma/client";
 import { CreateClientDto, UpdateClientDto } from "../dto/client.dto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
@@ -7,10 +6,7 @@ import { ensureExists, stripNullish } from "../../utils/helpers";
 import { ClientFilterDto } from "../dto/client-filter.dto";
 import { createHistoriqueService } from "./historique.service";
 
-
-
 import prisma from "../prisma";
-
 
 export async function createClient(
   dto: CreateClientDto,
@@ -42,10 +38,7 @@ export async function createClient(
 
     return { statusCode: 201, data: newClient };
   } catch (err) {
-    if (
-      err instanceof PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2002") {
       const field = Array.isArray(err.meta?.target)
         ? err.meta.target[0]
         : err.meta?.target;
@@ -55,12 +48,10 @@ export async function createClient(
   }
 }
 
-
 export async function getAllClients(filter: ClientFilterDto = {}) {
   const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
   const page = filter.page ? parseInt(filter.page as any) : 1;
   const skip = (page - 1) * perPage;
-
 
   const baseWhere: any = {};
 
@@ -68,9 +59,9 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   if (filter.prenom) baseWhere.prenom = filter.prenom;
   if (filter.adresse) baseWhere.adresse = filter.adresse;
   if (filter.email) baseWhere.email = filter.email;
-  if (filter.numeroTelephone) baseWhere.numeroTelephone = filter.numeroTelephone;
+  if (filter.numeroTelephone)
+    baseWhere.numeroTelephone = filter.numeroTelephone;
   if (filter.search) {
-
     baseWhere.OR = [
       { nom: { contains: filter.search } },
       { prenom: { contains: filter.search } },
@@ -79,7 +70,6 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
       { numeroTelephone: { contains: filter.search } },
     ];
   }
-
 
   const statutCondition = filter.statut
     ? filter.statut
@@ -101,8 +91,8 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
         include: {
           commentaires: {
             take: 5,
-            orderBy: { dateCreated: 'desc' }
-          }
+            orderBy: { dateCreated: "desc" },
+          },
         },
       }),
     ]);
@@ -125,29 +115,24 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   }
 }
 
-
-
 export async function getClientById(
   id: number
 ): Promise<ServiceResponse<Client>> {
   const find = await prisma.client.findFirst({
-    where: { idClient: id }, include: {
+    where: { idClient: id },
+    include: {
       commentaires: {
         take: 5,
-        orderBy: { dateCreated: 'desc' }
-      }
-    }
-  })
+        orderBy: { dateCreated: "desc" },
+      },
+    },
+  });
   if (!find) {
-    return { statusCode: 404, error: "Not found" }
+    return { statusCode: 404, error: "Not found" };
   }
 
-  return { statusCode: 200, data: find }
+  return { statusCode: 200, data: find };
 }
-
-
-
-
 
 export async function updateClient(
   id: number,
@@ -168,7 +153,9 @@ export async function updateClient(
         idClient: { not: id },
         OR: [
           data.email ? { email: data.email } : undefined,
-          data.numeroTelephone ? { numeroTelephone: data.numeroTelephone } : undefined,
+          data.numeroTelephone
+            ? { numeroTelephone: data.numeroTelephone }
+            : undefined,
         ].filter(Boolean) as Prisma.ClientWhereInput[],
       },
     });
@@ -191,10 +178,12 @@ export async function updateClient(
       });
 
       if (commentaires?.length) {
-        const inputs: Prisma.CommentaireCreateManyInput[] = commentaires.map(c => ({
-          contenu: c.contenu,
-          clientId: id,
-        }));
+        const inputs: Prisma.CommentaireCreateManyInput[] = commentaires.map(
+          (c) => ({
+            contenu: c.contenu,
+            clientId: id,
+          })
+        );
         await tx.commentaire.createMany({ data: inputs });
       }
 
@@ -222,17 +211,14 @@ export async function updateClient(
   }
 }
 
-
-
-
-
-export async function deleteClient(id: number, utilisateurId: number): Promise<ServiceResponse<null>> {
-
+export async function deleteClient(
+  id: number,
+  utilisateurId: number
+): Promise<ServiceResponse<null>> {
   await ensureExists(
     () => prisma.client.findUnique({ where: { idClient: id } }),
     "Client"
   );
-
 
   await prisma.$transaction(async (tx) => {
     await tx.commentaire.deleteMany({ where: { clientId: id } });
@@ -249,4 +235,3 @@ export async function deleteClient(id: number, utilisateurId: number): Promise<S
     message: "Client deleted successfully.",
   };
 }
-

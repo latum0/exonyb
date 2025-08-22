@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 
 export enum Role {
   ADMIN = "ADMIN",
@@ -22,31 +22,35 @@ interface User {
 }
 
 // Type safety for req.user
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-export const checkPermissions = (requiredPermissions: Permission[]) =>
-  (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// ✅ Typing retour RequestHandler
+export const checkPermissions = (
+  requiredPermissions: Permission[]
+): RequestHandler => {
+  return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
 
     const { role, permissions } = req.user;
 
     if (role === Role.ADMIN) {
-      return next(); // ADMIN has access to everything
+      return next(); // ADMIN has accès à tout
     }
 
-    const hasPermission = permissions?.some((p: string) =>
+    const hasPermission = permissions?.some((p) =>
       requiredPermissions.includes(p as Permission)
     );
 
     if (!hasPermission) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden: insufficient permissions" });
+      res.status(403).json({ message: "Forbidden: insufficient permissions" });
+      return;
     }
 
-    return next();
+    next();
   };
+};
