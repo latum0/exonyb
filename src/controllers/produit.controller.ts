@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import {
-  createProduit,
+  createProduitService,
   deleteProduit,
   getProduitById,
   getProduits,
@@ -14,6 +14,17 @@ export async function createProduitController(req: Request, res: Response) {
   req.body.prix = parseFloat(req.body.prix);
   req.body.stock = parseInt(req.body.stock, 10);
   req.body.remise = parseInt(req.body.remise, 10);
+  const utilisateurId = req.user?.sub;
+
+  if (req.body.fournisseurs && typeof req.body.fournisseurs === "string") {
+    try {
+      req.body.fournisseurs = JSON.parse(req.body.fournisseurs);
+    } catch (err) {
+      req.body.fournisseurs = req.body.fournisseurs
+        .split(",")
+        .map((i: string) => parseInt(i.trim(), 10));
+    }
+  }
 
   const dto = plainToInstance(CreateProduitDto, req.body);
   const errors = await validate(dto);
@@ -26,11 +37,18 @@ export async function createProduitController(req: Request, res: Response) {
     const files = req.files as Express.Multer.File[];
     const imageNames = files.map((f) => f.filename);
 
-    const produit = await createProduit(dto, imageNames);
-    return res.status(201).json(produit);
+    const produit = await createProduitService(
+      dto,
+      imageNames,
+      req.body.fournisseurs,
+      Number(utilisateurId)
+    );
+    return res.status(201).json({
+      message: "Produit créé avec succès",
+      produit: produit,
+    });
   } catch (err: any) {
-    console.error("Error creating produit:", err);
-    return res.status(500).json({ error: err.message || "Erreur serveur" });
+    return res.status(err.statusCode || 500).json({ message: err.message });
   }
 }
 
@@ -68,68 +86,61 @@ export const getProduitByIdController = async (req: Request, res: Response) => {
 export const updateProduitController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
+    const utilisateurId = req.user?.sub;
     let keepImages: string[] = [];
 
     const raw = req.body.keepImages;
-
     if (raw) {
       if (Array.isArray(raw)) {
         keepImages = raw.map((v) => String(v).trim()).filter(Boolean);
       } else if (typeof raw === "string") {
-        const s = raw.trim();
-
-        if (s.startsWith("[") && s.endsWith("]") && s.includes('"')) {
-          try {
-            const parsed = JSON.parse(s);
-            if (Array.isArray(parsed)) {
-              keepImages = parsed.map((v) => String(v).trim()).filter(Boolean);
-            } else {
-              keepImages = s
-                .replace(/^\[|\]$/g, "")
-                .split(",")
-                .map((v) => v.replace(/"/g, "").trim())
-                .filter(Boolean);
-            }
-          } catch {
-            keepImages = s
-              .replace(/^\[|\]$/g, "")
-              .split(",")
-              .map((v) => v.replace(/"/g, "").trim())
-              .filter(Boolean);
-          }
-        } else {
-          keepImages = s
+        try {
+          keepImages = JSON.parse(raw);
+          if (!Array.isArray(keepImages)) keepImages = [];
+          keepImages = keepImages.map((v) => String(v).trim()).filter(Boolean);
+        } catch {
+          keepImages = raw
             .split(",")
-            .map((v) => v.trim())
+            .map((v: string) => v.trim())
             .filter(Boolean);
         }
+      }
+    }
+
+    let fournisseurs: number[] | undefined;
+    if (req.body.fournisseurs) {
+      if (Array.isArray(req.body.fournisseurs)) {
+        fournisseurs = req.body.fournisseurs.map((v: any) => Number(v));
       } else {
-        keepImages = [];
+        fournisseurs = [Number(req.body.fournisseurs)];
       }
     }
 
     const updatedProduit = await updateProduit(
       id,
       { ...req.body, keepImages },
-      (req.files as Express.Multer.File[]) || []
+      (req.files as Express.Multer.File[]) || [],
+      Number(utilisateurId)
     );
 
     if (!updatedProduit) {
       return res.status(404).json({ message: "Produit non trouvé" });
     }
 
-    return res.json(updatedProduit);
-  } catch (error: any) {
-    console.error("[updateProduitController] error:", error);
-    return res.status(500).json({ message: error.message || "Erreur interne" });
+    return res.json({
+      message: "Produit mis à jour avec succès",
+      produit: updatedProduit,
+    });
+  } catch (err: any) {
+    console.error("[updateProduitController] error:", err);
+    return res.status(err.statusCode || 500).json({ message: err.message });
   }
 };
 export const deleteProduitController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
-    const deleted = await deleteProduit(id);
+    const utilisateurId = req.user?.sub;
+    const deleted = await deleteProduit(id, Number(utilisateurId));
 
     if (!deleted) {
       return res.status(404).json({ message: "Produit non trouvé" });

@@ -43,7 +43,7 @@ model Historique {
   idHistorique      Int      @id @default(autoincrement())
   dateModification  DateTime
   descriptionAction String
-  acteur            String
+ 
 
   utilisateurId Int
   utilisateur   Users @relation(fields: [utilisateurId], references: [id])
@@ -112,6 +112,8 @@ images      Json
 
   lignesCommande LigneCommande[]
   fournisseurs   Fournisseur[]   @relation("FournisseurProduit")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 

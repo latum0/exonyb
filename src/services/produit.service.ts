@@ -6,30 +6,74 @@ import { Produit } from "@prisma/client";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-export async function createProduit(
-  dto: CreateProduitDto,
-  images: string[]
+export class HttpError extends Error {
+  statusCode: number;
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+export async function createProduitService(
+  data: any,
+  images: string[] | undefined,
+  fournisseurs: number | number[] = [],
+  utilisateurId: number
 ): Promise<Produit> {
   if (!images || images.length === 0) {
-    throw new Error("Au moins une image est requise.");
+    throw new HttpError("Au moins une image est requise.", 400);
+  }
+
+  let fournisseurIds: number[] = [];
+  if (fournisseurs) {
+    fournisseurIds = Array.isArray(fournisseurs)
+      ? fournisseurs
+      : [fournisseurs];
+  }
+
+  if (fournisseurIds.length > 0) {
+    const existing = await prisma.fournisseur.findMany({
+      where: { idFournisseur: { in: fournisseurIds } },
+      select: { idFournisseur: true },
+    });
+    const existingIds = existing.map((f) => f.idFournisseur);
+    const invalidIds = fournisseurIds.filter((id) => !existingIds.includes(id));
+
+    if (invalidIds.length > 0) {
+      throw new HttpError(
+        `Fournisseurs non trouvés: ${invalidIds.join(", ")}`,
+        404
+      );
+    }
   }
 
   const produitId = crypto.randomUUID();
-
   const productUrl = `http://localhost:3000/produits/${produitId}`;
   const qrCode = await QRCode.toDataURL(productUrl);
+
   const produit = await prisma.produit.create({
     data: {
       idProduit: produitId,
-      nom: dto.nom,
-      description: dto.description,
-      prix: dto.prix,
-      stock: dto.stock,
-      remise: dto.remise ?? 0,
-      marque: dto.marque,
+      nom: data.nom,
+      description: data.description,
+      prix: data.prix,
+      stock: data.stock,
+      remise: data.remise ?? 0,
+      marque: data.marque,
       images,
-      categorie: dto.categorie,
+      categorie: data.categorie,
       qrCode,
+      fournisseurs: {
+        connect: fournisseurIds.map((id) => ({ idFournisseur: id })),
+      },
+    },
+  });
+  await prisma.historique.create({
+    data: {
+      dateModification: new Date(),
+      descriptionAction: `Création du produit ${produit.nom}`,
+
+      utilisateurId,
     },
   });
 
@@ -55,22 +99,29 @@ export const getProduits = async (
     }),
   };
 
-  const data = await prisma.produit.findMany({
+  const produits = await prisma.produit.findMany({
     skip,
     take: limit,
     where,
     select: {
       idProduit: true,
       nom: true,
-
       prix: true,
       stock: true,
       remise: true,
       marque: true,
       categorie: true,
       qrCode: true,
+      images: true, // on sélectionne les images
     },
+    orderBy: { createdAt: "desc" },
   });
+
+  // transformer pour ne garder que la première image
+  const data = produits.map((p) => ({
+    ...p,
+    images: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null,
+  }));
 
   const total = await prisma.produit.count({ where });
 
@@ -89,22 +140,23 @@ export const getProduitById = async (id: string) => {
   return prisma.produit.findUnique({
     where: { idProduit: id },
     include: {
-      fournisseurs: true,
+      fournisseurs: {
+        select: {
+          idFournisseur: true,
+          nom: true,
+        },
+      },
     },
   });
 };
 export const updateProduit = async (
   id: string,
   data: any,
-  files: Express.Multer.File[] = []
+  files: Express.Multer.File[] = [],
+  utilisateurId: number
 ) => {
-  const produit = await prisma.produit.findUnique({
-    where: { idProduit: id },
-  });
-
-  if (!produit) {
-    return null;
-  }
+  const produit = await prisma.produit.findUnique({ where: { idProduit: id } });
+  if (!produit) return null;
 
   let keepImages: string[] = [];
   if (Array.isArray(data.keepImages)) {
@@ -112,95 +164,139 @@ export const updateProduit = async (
       .map((v: any) => String(v).trim())
       .filter(Boolean);
   } else if (typeof data.keepImages === "string") {
-    const raw = data.keepImages.trim();
-    if (raw.startsWith("[") && raw.endsWith("]") && raw.includes('"')) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          keepImages = parsed.map((v: any) => String(v).trim()).filter(Boolean);
-        } else {
-          keepImages = raw
-            .replace(/^\[|\]$/g, "")
-            .split(",")
-
-            .map((s: string) => s.replace(/"/g, "").trim())
-            .filter(Boolean);
-        }
-      } catch {
-        keepImages = raw
-          .replace(/^\[|\]$/g, "")
+    try {
+      const parsed = JSON.parse(data.keepImages);
+      if (Array.isArray(parsed)) {
+        keepImages = parsed.map((v: any) => String(v).trim()).filter(Boolean);
+      } else {
+        keepImages = data.keepImages
           .split(",")
-          .map((s: string) => s.replace(/"/g, "").trim())
+          .map((v: string) => v.trim())
           .filter(Boolean);
       }
-    } else {
-      keepImages = raw
+    } catch {
+      keepImages = data.keepImages
         .split(",")
-        .map((s: string) => s.trim())
+        .map((v: string) => v.trim())
         .filter(Boolean);
     }
-  } else {
-    keepImages = [];
   }
-  //@ts-ignore
-  const existingImages: string[] = Array.isArray(produit.images)
-    ? produit.images
-    : [];
 
+  const existingImages: string[] = Array.isArray(produit.images)
+    ? produit.images.map(String)
+    : [];
   const imagesToDelete = existingImages.filter(
     (img) => !keepImages.includes(img)
   );
-
   const uploadPath = path.join(process.cwd(), "uploads", "produits");
-
   for (const img of imagesToDelete) {
     try {
       const filePath = path.join(uploadPath, img);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      } else {
-      }
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     } catch (err) {
       console.error("Failed to delete file", img, err);
     }
   }
-
   const newImages = (files || []).map((f) => f.filename);
-
   const finalImages = [...keepImages, ...newImages];
 
-  const updatedProduit = await prisma.produit.update({
-    where: { idProduit: id },
+  let fournisseurIds: number[] | undefined = undefined;
+  if (data.fournisseurs !== undefined) {
+    if (Array.isArray(data.fournisseurs)) {
+      fournisseurIds = data.fournisseurs
+        .map((v: any) => Number(v))
+        .filter((n: number) => !isNaN(n));
+    } else if (typeof data.fournisseurs === "string") {
+      const s = data.fournisseurs.trim();
+      if (s.startsWith("[") && s.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(s);
+          if (Array.isArray(parsed))
+            fournisseurIds = parsed
+              .map((v) => Number(v))
+              .filter((n) => !isNaN(n));
+        } catch {
+          fournisseurIds = s
+            .replace(/^\[|\]$/g, "")
+            .split(",")
+            .map((v: string) => Number(v.trim()))
+            .filter((n: number) => !isNaN(n));
+        }
+      } else {
+        fournisseurIds = s
+          .split(",")
+          .map((v: string) => Number(v.trim()))
+          .filter((n: number) => !isNaN(n));
+      }
+    } else if (typeof data.fournisseurs === "number") {
+      if (!isNaN(data.fournisseurs)) fournisseurIds = [data.fournisseurs];
+    }
+  }
+
+  let fournisseurConnect: { idFournisseur: number }[] | undefined = undefined;
+
+  if (fournisseurIds !== undefined) {
+    if (fournisseurIds.length === 0) {
+      fournisseurConnect = [];
+    } else {
+      const existing = await prisma.fournisseur.findMany({
+        where: { idFournisseur: { in: fournisseurIds } },
+        select: { idFournisseur: true },
+      });
+      const existingIds = existing.map((f) => f.idFournisseur);
+
+      const invalidIds = fournisseurIds.filter(
+        (id) => !existingIds.includes(id)
+      );
+      if (invalidIds.length > 0) {
+        throw new HttpError(
+          `Fournisseurs non trouvés: ${invalidIds.join(", ")}`,
+          404
+        );
+      }
+      fournisseurConnect = fournisseurIds.map((id) => ({ idFournisseur: id }));
+    }
+  } else {
+  }
+
+  const updatedProduit = await prisma.$transaction(async (tx) => {
+    const updated = await tx.produit.update({
+      where: { idProduit: id },
+      data: {
+        nom: data.nom ?? produit.nom,
+        description: data.description ?? produit.description,
+        prix: data.prix !== undefined ? Number(data.prix) : produit.prix,
+        stock:
+          data.stock !== undefined
+            ? parseInt(String(data.stock), 10)
+            : produit.stock,
+        remise:
+          data.remise !== undefined ? Number(data.remise) : produit.remise,
+        marque: data.marque ?? produit.marque,
+        categorie: data.categorie ?? produit.categorie,
+        images: finalImages,
+        ...(fournisseurIds !== undefined
+          ? { fournisseurs: { set: fournisseurConnect } }
+          : {}),
+      },
+      include: {
+        fournisseurs: true,
+      },
+    });
+    return updated;
+  });
+  await prisma.historique.create({
     data: {
-      nom: data.nom ?? produit.nom,
-      description: data.description ?? produit.description,
-      prix:
-        data.prix !== undefined
-          ? isNaN(Number(data.prix))
-            ? produit.prix
-            : Number(data.prix)
-          : produit.prix,
-      stock:
-        data.stock !== undefined
-          ? isNaN(Number(data.stock))
-            ? produit.stock
-            : parseInt(String(data.stock), 10)
-          : produit.stock,
-      remise:
-        data.remise !== undefined
-          ? isNaN(Number(data.remise))
-            ? produit.remise
-            : Number(data.remise)
-          : produit.remise,
-      marque: data.marque ?? produit.marque,
-      categorie: data.categorie ?? produit.categorie,
-      images: finalImages,
+      dateModification: new Date(),
+      descriptionAction: `Modification du produit ${produit.nom}`,
+
+      utilisateurId,
     },
   });
-
   return updatedProduit;
 };
-export const deleteProduit = async (id: string) => {
+
+export const deleteProduit = async (id: string, utilisateurId: number) => {
   const produit = await prisma.produit.findUnique({
     where: { idProduit: id },
   });
@@ -230,6 +326,13 @@ export const deleteProduit = async (id: string) => {
   await prisma.produit.delete({
     where: { idProduit: id },
   });
+  await prisma.historique.create({
+    data: {
+      dateModification: new Date(),
+      descriptionAction: `Suppression du produit ${produit.nom}`,
 
+      utilisateurId,
+    },
+  });
   return produit;
 };

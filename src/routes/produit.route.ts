@@ -12,7 +12,6 @@ import {
 } from "../controllers/produit.controller";
 
 const router = Router();
-
 /**
  * @swagger
  * /produits:
@@ -55,10 +54,16 @@ const router = Router();
  *                 items:
  *                   type: string
  *                   format: binary
+ *               fournisseurs:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *                 example: [1, 2, 3]
  *     responses:
  *       201:
  *         description: Produit créé avec succès
  */
+
 router.post(
   "/",
   authMiddleware as RequestHandler,
@@ -256,6 +261,11 @@ router.get(
  *               keepImages:
  *                 type: string
  *                 example: '["dld1.png","old2.png"]'
+ *               fournisseurs:
+ *                 type: array
+ *                 items:
+ *                   type: number
+ *                 example: [1,2]
  *               images:
  *                 type: array
  *                 items:
@@ -265,7 +275,7 @@ router.get(
  *       200:
  *         description: Produit mis à jour avec succès
  *       404:
- *         description: Produit non trouvé
+ *         description: Produit non trouvé ou fournisseurs non valides
  *       500:
  *         description: Erreur serveur
  */
