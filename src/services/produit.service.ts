@@ -49,7 +49,6 @@ export async function createProduitService(
 
   const produitId = crypto.randomUUID();
   const productUrl = `http://localhost:3000/produits/${produitId}`;
-  const qrCode = await QRCode.toDataURL(productUrl);
 
   const produit = await prisma.produit.create({
     data: {
@@ -62,7 +61,7 @@ export async function createProduitService(
       marque: data.marque,
       images,
       categorie: data.categorie,
-      qrCode,
+      qrCode: productUrl,
       fournisseurs: {
         connect: fournisseurIds.map((id) => ({ idFournisseur: id })),
       },

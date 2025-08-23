@@ -101,7 +101,7 @@ model LigneCommande {
 model Produit {
   idProduit   String   @id @default(uuid())
   nom         String
-  description String
+  description String   @db.Text  
   prix        Float
   stock       Int
   remise      Float
