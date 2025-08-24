@@ -116,12 +116,6 @@ export async function deleteHistoriqueById(
     const deleted = await tx.historique.delete({
       where: { idHistorique: id },
     });
-
-    await createHistoriqueService(
-      tx,
-      utilisateurId,
-      `Suppression de l'historique ID=${deleted.idHistorique}`
-    );
   });
 
   return {

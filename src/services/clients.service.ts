@@ -30,7 +30,7 @@ export async function createClient(
       await createHistoriqueService(
         tx,
         utilisateurId,
-        `Création du client ${dto.nom} (ID=${client.idClient})`
+        `Création du client ${dto.nom} `
       );
 
       return client;
@@ -190,7 +190,7 @@ export async function updateClient(
       await createHistoriqueService(
         tx,
         utilisateurId,
-        `Modification du client ID=${id}`
+        `Modification du client ${client.nom} ${client.prenom}`
       );
 
       return client;
@@ -215,7 +215,7 @@ export async function deleteClient(
   id: number,
   utilisateurId: number
 ): Promise<ServiceResponse<null>> {
-  await ensureExists(
+  const client = await ensureExists(
     () => prisma.client.findUnique({ where: { idClient: id } }),
     "Client"
   );
@@ -226,7 +226,7 @@ export async function deleteClient(
     await createHistoriqueService(
       tx,
       utilisateurId,
-      `suppression du client ID=${id}`
+      `suppression du client ${client.nom} ${client.prenom}`
     );
   });
 
