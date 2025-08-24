@@ -30,7 +30,7 @@ export async function createClient(
       await createHistoriqueService(
         tx,
         utilisateurId,
-        `Création du client ${dto.nom} `
+        `Création du client ${dto.nom} ${dto.prenom}`
       );
 
       return client;
@@ -115,9 +115,7 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   }
 }
 
-export async function getClientById(
-  id: number
-): Promise<ServiceResponse<Client>> {
+export async function getClientById(id: number): Promise<Client> {
   const find = await prisma.client.findFirst({
     where: { idClient: id },
     include: {
