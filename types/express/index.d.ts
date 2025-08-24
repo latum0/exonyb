@@ -3,7 +3,7 @@ import { Role, Permission } from "@prisma/client";
 declare global {
   namespace Express {
     interface User {
-      sub: string;
+      sub: number;
       email: string;
       role: Role;
       permissions?: Permission[];

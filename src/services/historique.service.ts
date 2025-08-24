@@ -38,11 +38,23 @@ export async function getAllHistoriques(filters: any = {}) {
   const skip = (page - 1) * perPage;
 
   const where: any = {};
-  if (filters.acteur) where.acteur = { contains: filters.acteur };
-  if (filters.descriptionAction)
+
+  if (filters.acteur) {
+    where.utilisateur = {
+      name: {
+        contains: filters.acteur,
+      },
+    };
+  }
+
+  if (filters.descriptionAction) {
     where.descriptionAction = { contains: filters.descriptionAction };
-  if (filters.utilisateurId)
+  }
+
+  if (filters.utilisateurId) {
     where.utilisateurId = Number(filters.utilisateurId);
+  }
+
   if (filters.dateFrom || filters.dateTo) {
     where.dateModification = {};
     if (filters.dateFrom)
@@ -64,7 +76,6 @@ export async function getAllHistoriques(filters: any = {}) {
           utilisateur: {
             select: {
               id: true,
-
               name: true,
             },
           },
@@ -72,6 +83,7 @@ export async function getAllHistoriques(filters: any = {}) {
         orderBy: { dateModification: "desc" },
       }),
     ]);
+
     return {
       statusCode: 200,
       data: {
