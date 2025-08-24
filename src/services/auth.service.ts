@@ -4,9 +4,9 @@ import {
   generateEmailVerificationToken,
   generateTokens,
   verifyRefreshToken,
-} from "../../utils/tokens";
+} from "../utils/tokens";
 import jwt from "jsonwebtoken";
-import { sendVerificationEmail } from "../../utils/email";
+import { sendVerificationEmail } from "../utils/email";
 import { ChangePasswordDto } from "../dto/auth.dto";
 const prisma = new PrismaClient();
 const accessSecret = process.env.JWT_ACCESS_SECRET!;

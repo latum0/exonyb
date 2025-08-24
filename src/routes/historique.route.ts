@@ -1,8 +1,13 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
-import { asyncWrapper } from "../../utils/asyncWrapper";
-import { getAllHistoriquesController, getHistoriqueByIdController, deleteHistoriqueByIdController, deleteOldHistoriquesController } from "../controllers/historique.controller";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
+import { asyncWrapper } from "../utils/asyncWrapper";
+import {
+  getAllHistoriquesController,
+  getHistoriqueByIdController,
+  deleteHistoriqueByIdController,
+  deleteOldHistoriquesController,
+} from "../controllers/historique.controller";
 
 const router = Router();
 
@@ -110,10 +115,10 @@ const router = Router();
  *         description: Accès interdit (permissions insuffisantes)
  */
 router.get(
-    "/",
-    authMiddleware,
-    requireAdmin,
-    asyncWrapper(getAllHistoriquesController)
+  "/",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(getAllHistoriquesController)
 );
 
 /**
@@ -166,10 +171,10 @@ router.get(
  *         description: Historique non trouvé
  */
 router.get(
-    "/:id",
-    authMiddleware,
-    requireAdmin,
-    asyncWrapper(getHistoriqueByIdController)
+  "/:id",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(getHistoriqueByIdController)
 );
 
 /**
@@ -199,10 +204,10 @@ router.get(
  *         description: Accès interdit (permissions insuffisantes)
  */
 router.delete(
-    "/old",
-    authMiddleware,
-    requireAdmin,
-    asyncWrapper(deleteOldHistoriquesController)
+  "/old",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(deleteOldHistoriquesController)
 );
 
 /**
@@ -242,10 +247,10 @@ router.delete(
  *         description: Historique non trouvé
  */
 router.delete(
-    "/:id",
-    authMiddleware,
-    requireAdmin,
-    asyncWrapper(deleteHistoriqueByIdController)
+  "/:id",
+  authMiddleware,
+  requireAdmin,
+  asyncWrapper(deleteHistoriqueByIdController)
 );
 
-export default router; 
+export default router;

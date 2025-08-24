@@ -3,7 +3,6 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 export enum Role {
   ADMIN = "ADMIN",
   MANAGER = "MANAGER",
-  // add others
 }
 
 export enum Permission {
@@ -12,34 +11,28 @@ export enum Permission {
   SAV = "SAV",
 }
 
-// Define a User interface matching what Express expects plus your custom fields
 interface User {
-  id: string;
+  id: number;
   email: string;
   role: Role;
   permissions: Permission[];
   [key: string]: any;
 }
 
-// Type safety for req.user
-export interface AuthenticatedRequest extends Request {
-  user?: User;
-}
-
-// ✅ Typing retour RequestHandler
 export const checkPermissions = (
   requiredPermissions: Permission[]
 ): RequestHandler => {
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ message: "Unauthorized" });
-      return;
+      return; // 👈 corrige le type
     }
 
     const { role, permissions } = req.user;
 
     if (role === Role.ADMIN) {
-      return next(); // ADMIN has accès à tout
+      next();
+      return;
     }
 
     const hasPermission = permissions?.some((p) =>

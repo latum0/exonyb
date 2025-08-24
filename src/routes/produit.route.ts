@@ -1,8 +1,8 @@
 import { RequestHandler, Router } from "express";
 
-import { uploadProduitImages } from "../../utils/upload";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { checkPermissions, Permission } from "../../middlewares/permissions";
+import { uploadProduitImages } from "../utils/upload";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { checkPermissions, Permission } from "../middlewares/permissions";
 import {
   createProduitController,
   deleteProduitController,

@@ -1,8 +1,8 @@
 import { Client, Prisma, ClientStatut } from "@prisma/client";
 import { CreateClientDto, UpdateClientDto } from "../dto/client.dto";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-import { ConflictError } from "../../utils/errors";
-import { ensureExists, stripNullish } from "../../utils/helpers";
+import { ConflictError } from "../utils/errors";
+import { ensureExists, stripNullish } from "../utils/helpers";
 import { ClientFilterDto } from "../dto/client-filter.dto";
 import { createHistoriqueService } from "./historique.service";
 
@@ -115,7 +115,7 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   }
 }
 
-export async function getClientById(id: number): Promise<Client> {
+export async function getClientById(id: number) {
   const find = await prisma.client.findFirst({
     where: { idClient: id },
     include: {

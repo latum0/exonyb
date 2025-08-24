@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { ensureExists } from "../../utils/helpers";
+import { ensureExists } from "../utils/helpers";
 import prisma from "../prisma";
 
 export async function createHistoriqueService(

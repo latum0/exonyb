@@ -10,9 +10,9 @@ import {
   verifyEmailController,
 } from "../controllers/auth.controller";
 import { ForgotPasswordDto, LoginDto } from "../dto/auth.dto";
-import { validateDto } from "../../middlewares/validateDto";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { swaggerRouteDoc } from "../../utils/waggerHelpers";
+import { validateDto } from "../middlewares/validateDto";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { swaggerRouteDoc } from "../utils/waggerHelpers";
 
 const router = Router();
 

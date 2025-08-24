@@ -1,12 +1,19 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
 import { CreateRetourDto, UpdateRetourDto } from "../dto/retour.dto";
-import { createRetourController, deleteRetourController, filterRetoursController, getAllRetoursController, getretourByIdController, updateRetourController } from "../controllers/retour.controller";
-import { asyncWrapper } from "../../utils/asyncWrapper";
+import {
+  createRetourController,
+  deleteRetourController,
+  filterRetoursController,
+  getAllRetoursController,
+  getretourByIdController,
+  updateRetourController,
+} from "../controllers/retour.controller";
+import { asyncWrapper } from "../utils/asyncWrapper";
 import { RetourFilterDto } from "../dto/retour-filter.dto";
-import { validateDtoClient } from "../../middlewares/validateDtoClient";
-import { checkPermissions } from "../../middlewares/permissions";
+import { validateDtoClient } from "../middlewares/validateDtoClient";
+import { checkPermissions } from "../middlewares/permissions";
 import { Permission } from "@prisma/client";
 
 const router = Router();
@@ -67,12 +74,12 @@ const router = Router();
  *         description: Accès interdit
  */
 router.post(
-    "/",
-    authMiddleware,
-    //@ts-ignore
-    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
-    validateDtoClient(CreateRetourDto),
-    asyncWrapper(createRetourController)
+  "/",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
+  validateDtoClient(CreateRetourDto),
+  asyncWrapper(createRetourController)
 );
 
 /**
@@ -147,11 +154,11 @@ router.post(
  *         description: Accès interdit
  */
 router.get(
-    "/",
-    authMiddleware,
-    //@ts-ignore
-    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
-    asyncWrapper(getAllRetoursController)
+  "/",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
+  asyncWrapper(getAllRetoursController)
 );
 
 /**
@@ -191,11 +198,11 @@ router.get(
  *         description: Accès interdit
  */
 router.post(
-    "/filter",
-    authMiddleware,
-    requireAdmin,
-    validateDtoClient(RetourFilterDto),
-    asyncWrapper(filterRetoursController)
+  "/filter",
+  authMiddleware,
+  requireAdmin,
+  validateDtoClient(RetourFilterDto),
+  asyncWrapper(filterRetoursController)
 );
 
 /**
@@ -229,11 +236,11 @@ router.post(
  *         description: Retour non trouvé
  */
 router.get(
-    "/:id",
-    authMiddleware,
-    //@ts-ignore
-    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
-    asyncWrapper(getretourByIdController)
+  "/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
+  asyncWrapper(getretourByIdController)
 );
 
 /**
@@ -275,12 +282,12 @@ router.get(
  *         description: Retour non trouvé
  */
 router.patch(
-    "/:id",
-    authMiddleware,
-    //@ts-ignore
-    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
-    validateDtoClient(UpdateRetourDto),
-    asyncWrapper(updateRetourController)
+  "/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
+  validateDtoClient(UpdateRetourDto),
+  asyncWrapper(updateRetourController)
 );
 
 /**
@@ -310,11 +317,11 @@ router.patch(
  *         description: Retour non trouvé
  */
 router.delete(
-    "/:id",
-    authMiddleware,
-    //@ts-ignore
-    checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
-    asyncWrapper(deleteRetourController)
+  "/:id",
+  authMiddleware,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
+  asyncWrapper(deleteRetourController)
 );
 
 export default router;

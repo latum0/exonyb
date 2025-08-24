@@ -1,5 +1,5 @@
 import { Client } from "@prisma/client";
-import { ensureExists } from "../../utils/helpers";
+import { ensureExists } from "../utils/helpers";
 import { ClientStatut } from "@prisma/client";
 import { createHistoriqueService } from "./historique.service";
 

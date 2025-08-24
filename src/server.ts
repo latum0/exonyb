@@ -9,12 +9,13 @@ import path from "path";
 import cors from "cors";
 import clientsRoutes from "./routes/clients.route";
 import fournisseursRoutes from "./routes/fournisseur.route";
-import { errorHandler } from "../middlewares/error-handler";
+
 import retoursRoutes from "./routes/retour.route";
 import historiquesRoutes from "./routes/historique.route";
 import produitsRoutes from "./routes/produit.route";
 import cron from "node-cron";
 import { deleteOldHistoriques } from "./services/historique.service";
+import { errorHandler } from "./middlewares/error-handler";
 
 const app: Application = express();
 

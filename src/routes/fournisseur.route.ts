@@ -6,11 +6,14 @@ import {
   getFournisseurByIdController,
   deleteFournisseurController,
 } from "../controllers/fournisseur.controller";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
-import { CreateFournisseurDto, UpdateFournisseurDto } from "../dto/fournisseur.dto";
-import { asyncWrapper } from "../../utils/asyncWrapper";
-import { validateDtoClient } from "../../middlewares/validateDtoClient";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
+import {
+  CreateFournisseurDto,
+  UpdateFournisseurDto,
+} from "../dto/fournisseur.dto";
+import { asyncWrapper } from "../utils/asyncWrapper";
+import { validateDtoClient } from "../middlewares/validateDtoClient";
 
 const router = Router();
 
@@ -96,7 +99,6 @@ const router = Router();
  *         description: Accès interdit (droits insuffisants)
  */
 
-
 router.post(
   "/",
   authMiddleware,
@@ -104,7 +106,6 @@ router.post(
   validateDtoClient(CreateFournisseurDto),
   asyncWrapper(createFournisseurController)
 );
-
 
 /**
  * @swagger
@@ -167,7 +168,6 @@ router.patch(
   asyncWrapper(updateFournisseurController)
 );
 
-
 /**
  * @swagger
  * /fournisseurs:
@@ -220,15 +220,12 @@ router.patch(
  *         description: Accès interdit (droits insuffisants)
  */
 
-
-
 router.get(
   "/",
   authMiddleware,
   requireAdmin,
   asyncWrapper(getAllFournisseurController)
 );
-
 
 /**
  * @swagger
@@ -295,7 +292,6 @@ router.get(
   requireAdmin,
   asyncWrapper(getFournisseurByIdController)
 );
-
 
 /**
  * @swagger

@@ -3,8 +3,8 @@ import {
   CreateFournisseurDto,
   UpdateFournisseurDto,
 } from "../dto/fournisseur.dto";
-import { ensureExists, stripNullish } from "../../utils/helpers";
-import { ConflictError, NotFoundError } from "../../utils/errors";
+import { ensureExists, stripNullish } from "../utils/helpers";
+import { ConflictError, NotFoundError } from "../utils/errors";
 import { Prisma } from "@prisma/client";
 import { createHistoriqueService } from "./historique.service";
 import prisma from "../prisma";
