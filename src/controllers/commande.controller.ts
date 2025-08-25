@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { CreateCommandeDto, UpdateCommandeDto } from "../dto/commande.dto";
+import { CreateCommandeDto, GetCommandesQueryDto, UpdateCommandeDto } from "../dto/commande.dto";
 import { createCommande, deleteCommande, getCommandeById, getCommandes, updateCommande } from "../services/commande.service";
-import { BadRequestError } from "../../utils/errors";
-import { GetCommandesQueryDto } from "../dto/commande-filter.dto";
+import { BadRequestError } from "../utils/errors";
 
 
 

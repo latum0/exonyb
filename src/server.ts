@@ -8,20 +8,18 @@ import cookieParser from "cookie-parser";
 import path from "path";
 import cors from "cors";
 import clientsRoutes from "./routes/clients.route";
-import fournisseursRoutes from "./routes/fournisseur.route"
-import { errorHandler } from "../middlewares/error-handler";
-import retoursRoutes from "./routes/retour.route"
+import fournisseursRoutes from "./routes/fournisseur.route";
+
+import retoursRoutes from "./routes/retour.route";
 import historiquesRoutes from "./routes/historique.route";
 import commandesRoutes from "./routes/commande.route";
 import ligneRoutes from "./routes/ligneCommande.route";
 import notifRoutes from "./routes/notification.route";
-
-
 import { scheduleHistoriqueCleanup } from "./jobs/historiqueCleanup";
-
+import produitsRoutes from "./routes/produit.route";
+import { errorHandler } from "./middlewares/error-handler";
 
 const app: Application = express();
-
 
 app.use(express.json());
 app.use(cookieParser());
@@ -35,18 +33,16 @@ app.use(
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/clients", clientsRoutes);
-app.use("/fournisseurs", fournisseursRoutes)
-app.use("/retours", retoursRoutes)
+app.use("/fournisseurs", fournisseursRoutes);
+app.use("/retours", retoursRoutes);
 app.use("/historiques", historiquesRoutes);
 app.use("/commandes", commandesRoutes);
 app.use("/lignes", ligneRoutes);
-app.use("/notification", notifRoutes);
-
-
-
+app.use("/notifications", notifRoutes);
+app.use("/produits", produitsRoutes);
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
-
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
 

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
 import { CreateCommandeDto } from "../dto/commande.dto";
 import { createCommandeController, deleteCommandeController, getAllCommandesController, getCommandeByIdController, updateCommandeController } from "../controllers/commande.controller";
-import { asyncWrapper } from "../../utils/asyncWrapper";
-import { validateDtoClient } from "../../middlewares/validateDtoClient";
+import { asyncWrapper } from "../utils/asyncWrapper";
+import { validateDtoClient } from "../middlewares/validateDtoClient";
 
 
 

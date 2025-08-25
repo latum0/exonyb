@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
-import { asyncWrapper } from "../../utils/asyncWrapper";
 import { deleteNotificationController, getNotificationByIdController, getNotificationsController } from "../controllers/notification.controller";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
+import { asyncWrapper } from "../utils/asyncWrapper";
 
 
 

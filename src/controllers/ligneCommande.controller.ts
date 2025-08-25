@@ -1,10 +1,7 @@
 import { NextFunction, Response, Request } from "express";
 import { UpdatePrixUnitaireLigneDto } from "../dto/ligneCommande.dto";
-import { BadRequestError } from "../../utils/errors";
+import { BadRequestError } from "../utils/errors";
 import { getLigneById, getLignesByCommande, updateLignePrixUnitaire } from "../services/ligneCommande.service";
-
-
-
 
 
 export async function updateLignePrixUnitaireController(req: Request, res: Response, next: NextFunction): Promise<void> {

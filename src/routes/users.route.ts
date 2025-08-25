@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAdmin } from "../../middlewares/requireAdmin";
+import { requireAdmin } from "../middlewares/requireAdmin";
 import { CreateUserDto } from "../dto/user.dto";
 import {
   createUserController,
@@ -8,9 +8,9 @@ import {
   getUserByIdController,
   updateUserPermissionsController,
 } from "../controllers/users.controller";
-import { validateDto } from "../../middlewares/validateDto";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { checkPermissions } from "../../middlewares/permissions";
+import { validateDto } from "../middlewares/validateDto";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { checkPermissions } from "../middlewares/permissions";
 import { Permission } from "@prisma/client";
 
 const router = Router();

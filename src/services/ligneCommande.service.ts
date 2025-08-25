@@ -1,7 +1,7 @@
 import prisma from "../prisma";
-import { ensureExists } from "../../utils/helpers";
+import { ensureExists } from "../utils/helpers";
 import { UpdatePrixUnitaireLigneDto } from "../dto/ligneCommande.dto";
-import { BadRequestError, NotFoundError } from "../../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import { LigneCommande, Prisma } from "@prisma/client";
 import { LigneResponseDto } from "../dto/response.dto";
 import { createHistoriqueService } from "./historique.service";
@@ -109,7 +109,7 @@ export async function updateLigneQuantity(
         });
 
         try {
-            await restockNotification(tx, [produitId], utilisateurId);
+            await restockNotification(tx, [produitId]);
         } catch (err) {
             console.error("Notification resolving failed (updateLigneQuantity)", err);
         }
@@ -216,7 +216,7 @@ export async function removeLigne(
     }
 
     try {
-        await restockNotification(tx, [produitId], utilisateurId);
+        await restockNotification(tx, [produitId]);
     } catch (err) {
         console.error("Notification resolving failed (removeLigne)", err);
     }

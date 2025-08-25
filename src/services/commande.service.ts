@@ -1,12 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { CreateCommandeDto, GetCommandesQueryDto, UpdateCommandeDto } from "../dto/commande.dto";
-import { ensureExists, prixUnitaire, stripNullish } from "../../utils/helpers";
+import { ensureExists, prixUnitaire, stripNullish } from "../utils/helpers";
 import prisma from "../prisma";
 import { CommandeResponseDto } from "../dto/response.dto";
-import { BadRequestError, NotFoundError } from "../../utils/errors";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 import { createHistoriqueService } from "./historique.service";
 import { addLigne, calcMontantT, removeLigne, updateLigneQuantity } from "./ligneCommande.service";
 import { createStockNotificationsIfNeeded } from "./notification.service";
+
 export async function createCommande(
   dto: CreateCommandeDto,
   utilisateurId: number
@@ -24,11 +25,9 @@ export async function createCommande(
   }));
 
   const produitIds = mergedLines.map(l => l.produitId);
-  // ensure unique ids for passing to helper
   const uniqueProduitIds = Array.from(new Set(produitIds));
 
   const createdCommande = await prisma.$transaction(async (tx) => {
-    // Use tx inside the transaction (not prisma) for consistent isolation
     await ensureExists(() => tx.client.findUnique({ where: { idClient: dto.clientId } }), "Client");
 
     const produits = await tx.produit.findMany({
@@ -56,7 +55,6 @@ export async function createCommande(
       };
     });
 
-    // Decrement stock (fail if not enough)
     for (const lp of linesPrepared) {
       const r = await tx.produit.updateMany({
         where: { idProduit: lp.produitId, stock: { gte: lp.quantite } },
@@ -68,7 +66,6 @@ export async function createCommande(
       }
     }
 
-    // Create the commande and lines
     const created = await tx.commande.create({
       data: {
         dateCommande: dto.dateCommande ?? new Date(),
@@ -89,25 +86,18 @@ export async function createCommande(
       }
     });
 
-    // historique
     await createHistoriqueService(
       tx,
       utilisateurId,
       `Création de la commande ${created.idCommande} pour le client ${created.clientId}`
     );
 
-    // --- NOTIFICATIONS: create OUT_OF_STOCK notifications for produits that became 0 ---
-    // We call the helper using the same tx so it's part of the same transaction.
     try {
       await createStockNotificationsIfNeeded(tx, uniqueProduitIds, {
         trigger: `commande:${created.idCommande}`,
         utilisateurId
       });
-      // you may log the returned value if you want to know how many were created
     } catch (err) {
-      // don't expose internal error; if you want strict behavior, rethrow.
-      // we swallow/log to avoid failing the entire transaction because of notification issues
-      // (optionally rethrow if notifications must be guaranteed)
       console.error("Failed to create stock notifications", err);
     }
 

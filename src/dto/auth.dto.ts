@@ -19,11 +19,11 @@ import {
  *         email:
  *           type: string
  *           format: email
- *           example: user@example.com
+ *           example: lizadjebara2@gmail.com
  *         password:
  *           type: string
  *           minLength: 8
- *           example: StrongP@ssw0rd
+ *           example: strongPass1!
  *           description: Must contain uppercase, lowercase, number, and special character
  */
 export class LoginDto {

@@ -8,7 +8,7 @@ import {
   resetPassword,
   verifyEmailService,
 } from "../services/auth.service";
-import { sendResetPasswordEmail } from "../../utils/email";
+import { sendResetPasswordEmail } from "../utils/email";
 import { plainToInstance } from "class-transformer";
 import { ChangePasswordDto } from "../dto/auth.dto";
 import { validateOrReject, ValidationError } from "class-validator";

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middlewares/authMiddleware";
-import { requireAdmin } from "../../middlewares/requireAdmin";
-import { asyncWrapper } from "../../utils/asyncWrapper";
+import { authMiddleware } from "../middlewares/authMiddleware";
+import { requireAdmin } from "../middlewares/requireAdmin";
+import { asyncWrapper } from "../utils/asyncWrapper";
 import { getLigneByCommandeController, getLigneByIdController, updateLignePrixUnitaireController } from "../controllers/ligneCommande.controller";
 
 

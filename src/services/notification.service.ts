@@ -1,17 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { NotificationListResponseDto, NotificationResponseDto } from "../dto/response.dto";
-import { ensureExists } from "../../utils/helpers";
+import { ensureExists } from "../utils/helpers";
 import prisma from "../prisma";
 import { NotificationQueryDto } from "../dto/notification.dto";
 import { createHistoriqueService } from "./historique.service";
-
-
-
-
-
-
-
-
 
 
 
@@ -66,8 +58,7 @@ export async function createStockNotificationsIfNeeded(
 
 export async function restockNotification(
     tx: Prisma.TransactionClient,
-    produitIds: string[],
-    utilisateurId?: number
+    produitIds: string[]
 ): Promise<{ resolved: number }> {
     if (!produitIds || produitIds.length === 0) return { resolved: 0 };
 

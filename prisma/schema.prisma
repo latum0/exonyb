@@ -105,21 +105,23 @@ model LigneCommande {
 }
 
 model Produit {
-  idProduit String @id @default(uuid())
-
+  idProduit   String   @id @default(uuid())
   nom         String
-  description String
+  description String   @db.Text  
   prix        Float
   stock       Int
   remise      Float
   marque      String
-  image       String
+  images      Json     
   categorie   String
+  qrCode      String  @unique
 
   lignesCommande LigneCommande[]
   fournisseurs   Fournisseur[]   @relation("FournisseurProduit")
 
   Notification Notification[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Fournisseur {

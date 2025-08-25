@@ -3,8 +3,8 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { CreateUserDto } from "../dto/user.dto";
-import { generateEmailVerificationToken } from "../../utils/tokens";
-import { sendVerificationEmail } from "../../utils/email";
+import { generateEmailVerificationToken } from "../utils/tokens";
+import { sendVerificationEmail } from "../utils/email";
 
 const prisma = new PrismaClient();
 
