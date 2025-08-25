@@ -23,8 +23,8 @@ export async function getNotificationsController(
 ): Promise<void> {
     const dto = req.query as NotificationQueryDto;
 
-    const { statusCode, data, message } = await getNotifications(dto as NotificationQueryDto);
-    res.status(statusCode).json({ data, message });
+    const { statusCode, data } = await getNotifications();
+    res.status(statusCode).json({ data });
 }
 
 export async function deleteNotificationController(

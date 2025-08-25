@@ -1,6 +1,6 @@
 export class NotFoundError extends Error {
     constructor(entity: string, context?: string) {
-        super(`${entity} not found ${context ? `:${context}` : ""}`);
+        super(`${entity} introuvable${context ? `: ${context}` : ""}`);
         this.name = "NotFoundError";
         Object.setPrototypeOf(this, NotFoundError.prototype);
     }
@@ -8,7 +8,7 @@ export class NotFoundError extends Error {
 
 export class ConflictError extends Error {
     constructor(entity: string, field?: string) {
-        super(field ? `${entity} with this ${field} already exists` : `${entity} conflict`);
+        super(field ? `${entity} avec ce ${field} existe déjà` : `${entity} en conflit`);
         this.name = "ConflictError";
         Object.setPrototypeOf(this, ConflictError.prototype);
     }
@@ -24,14 +24,12 @@ export class BadRequestError extends Error {
 }
 
 export class ValidationError extends Error {
-  public readonly details?: unknown;
+    public readonly details?: unknown;
 
-  constructor(message: string, details?: unknown) {
-    super(message);
-    this.name = "ValidationError";
-    this.details = details;
-    Object.setPrototypeOf(this, ValidationError.prototype);
-  }
+    constructor(message: string, details?: unknown) {
+        super(message);
+        this.name = "ValidationError";
+        this.details = details;
+        Object.setPrototypeOf(this, ValidationError.prototype);
+    }
 }
-
-

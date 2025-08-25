@@ -53,12 +53,3 @@ export class NotificationResponseDto {
 }
 
 
-export class NotificationListResponseDto {
-    items!: NotificationResponseDto[];
-    meta!: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-    };
-}

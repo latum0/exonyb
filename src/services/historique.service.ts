@@ -18,8 +18,8 @@ export async function createHistoriqueService(
     data: {
       dateModification,
       descriptionAction,
-
       utilisateurId,
+      acteur: user.name,
     },
   });
 }
@@ -125,7 +125,8 @@ export async function deleteHistoriqueById(
   );
 
   await prisma.$transaction(async (tx) => {
-    const deleted = await tx.historique.delete({
+    await createHistoriqueService(tx, utilisateurId, `Historique ${id} supprimé`)
+    await tx.historique.delete({
       where: { idHistorique: id },
     });
   });

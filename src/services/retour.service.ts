@@ -20,7 +20,7 @@ export async function createRetour(
   );
   await ensureUnique(
     () => prisma.retour.findUnique({ where: { commandeId: data.commandeId } }),
-    "Return for this order"
+    "Retour"
   );
 
   try {
@@ -145,7 +145,7 @@ export async function updateRetour(
   const stripData = stripNullish(data);
 
   const updatedRetour = await prisma.$transaction(async (tx) => {
-    const before = await tx.retour.findUnique({ where: { idRetour: id } });
+    await tx.retour.findUnique({ where: { idRetour: id } });
 
     const retour = await tx.retour.update({
       where: { idRetour: id },

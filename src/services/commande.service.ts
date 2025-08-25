@@ -62,7 +62,7 @@ export async function createCommande(
       });
       if (r.count === 0) {
         const prod = produitMap.get(lp.produitId);
-        throw new BadRequestError(`Insufficient stock for ${prod?.nom ?? lp.produitId}`);
+        throw new BadRequestError(`Stock insuffisant pour le produit ${prod?.nom ?? lp.produitId}`);
       }
     }
 
@@ -192,23 +192,26 @@ export async function updateCommande(
     if (Array.isArray(lignes)) {
       for (const patch of lignes) {
         if (patch.op === 'update') {
-          if (!patch.produitId || patch.quantite === undefined) { throw new BadRequestError("produitId ou quantite doit existent") };
+          if (!patch.produitId || patch.quantite === undefined) { throw new BadRequestError("Le produitId ou la quantité doit exister.") };
           await updateLigneQuantity(tx, patch.produitId, idCommande, patch.quantite, utilisateurId);
           if (utilisateurId) await createHistoriqueService(tx, utilisateurId, `Quantité modifiée: produit ${patch.produitId} -> ${patch.quantite} (commande ${idCommande})`);
         } else if (patch.op === 'add') {
-          if (!patch.produitId || patch.quantite === undefined) throw new BadRequestError("produitId ou quantite doit existent")
+          if (!patch.produitId || patch.quantite === undefined) throw new BadRequestError("Le produitId ou la quantité doit exister.")
           await addLigne(tx, idCommande, patch.produitId, patch.quantite, utilisateurId);
         } else if (patch.op === 'remove') {
-          if (!patch.produitId) throw new BadRequestError("produitId ou quantite doit existent");
+          if (!patch.produitId) throw new BadRequestError("Le produitId ou la quantité doit exister.");
           await removeLigne(tx, idCommande, patch.produitId, utilisateurId);
         } else {
-          throw new BadRequestError('Op invalide pour ligne');
+          throw new BadRequestError('Opération invalide pour la ligne.');
         }
       }
     }
 
     const totalDecimal = await calcMontantT(tx, idCommande);
     const totalStr = totalDecimal.toFixed(2);
+    if (commandePatch.clientId) {
+      await ensureExists(() => prisma.client.findUnique({ where: { idClient: commandePatch.clientId } }), "Client")
+    }
 
     const updated = await tx.commande.update({
       where: { idCommande },
@@ -279,21 +282,6 @@ export async function getCommandeById(idCommande: string): Promise<ServiceRespon
 
 }
 
-
-type GetCommandesQuery = {
-  page?: number;
-  limit?: number;
-  clientId?: number;
-  statut?: string;
-  produitId?: string;
-  dateFrom?: string | Date;
-  dateTo?: string | Date;
-  minTotal?: number;
-  maxTotal?: number;
-  search?: string;
-  orderBy?: "dateCommande" | "montantTotal" | "clientId";
-  orderDir?: "asc" | "desc";
-};
 
 type PaginatedCommandes = {
   items: CommandeResponseDto[];
@@ -427,4 +415,12 @@ export async function deleteCommande(
   });
 
   return { statusCode: 200, message: "Commande supprimée" };
+}
+
+
+
+export async function updateCommandeStatut(tx: Prisma.TransactionClient, idClient: number, statut: string): Promise<void> {
+  await ensureExists(() => tx.client.findUnique({ where: { idClient } }), "Client")
+  await prisma.commande.updateMany({ where: { clientId: idClient }, data: { statut } })
+
 }

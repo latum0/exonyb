@@ -25,7 +25,7 @@ export async function createFournisseur(
       if (missing.length > 0) {
         throw new NotFoundError(
           "Produit",
-          `The following product IDs do not exist: ${missing.join(", ")}`
+          `Les identifiants de produit suivants n’existent pas : ${missing.join(", ")}`
         );
       }
     }

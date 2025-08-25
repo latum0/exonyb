@@ -4,6 +4,7 @@ import { ClientStatut } from "@prisma/client";
 import { createHistoriqueService } from "./historique.service";
 
 import prisma from "../prisma";
+import { updateCommandeStatut } from "./commande.service";
 
 export async function addToBlacklist(
   id: number,
@@ -22,6 +23,7 @@ export async function addToBlacklist(
       where: { idClient: id },
       data: { statut: ClientStatut.BLACKLISTED },
     });
+    await updateCommandeStatut(tx, id, "BLACKLISTED");
 
     await createHistoriqueService(
       tx,
@@ -49,13 +51,14 @@ export async function deleteFromBlacklist(
   );
 
   if (client.statut === ClientStatut.ACTIVE) {
-    return { statusCode: 409, message: "Client already active" };
+    return { statusCode: 409, message: "Le client est déjà actif." };
   }
   const activated = await prisma.$transaction(async (tx) => {
     const updated = await tx.client.update({
       where: { idClient: id },
       data: { statut: ClientStatut.ACTIVE },
     });
+    await updateCommandeStatut(tx, id, "PENDING");
 
     await createHistoriqueService(
       tx,
@@ -85,7 +88,7 @@ export async function getAllBlacklistedClients(opts?: {
     orderBy: { nom: "asc" },
     include: { commentaires: true },
   });
-  return { statusCode: 200, data: list, message: "List of the blacklist." };
+  return { statusCode: 200, data: list, message: "Liste des clients en liste noire." };
 }
 
 export async function getBlacklistedClientById(
@@ -97,7 +100,7 @@ export async function getBlacklistedClientById(
         where: { idClient: id, statut: ClientStatut.BLACKLISTED },
         include: { commentaires: true },
       }),
-    "Blacklisted client"
+    "Client sur liste noire"
   );
   return { statusCode: 200, data: blacklistedClient };
 }

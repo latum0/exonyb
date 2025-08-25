@@ -230,6 +230,6 @@ export async function deleteClient(
 
   return {
     statusCode: 200,
-    message: "Client deleted successfully.",
+    message: "Client supprimé avec succès.",
   };
 }

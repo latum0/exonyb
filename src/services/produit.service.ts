@@ -6,6 +6,7 @@ import { Produit } from "@prisma/client";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { restockNotification } from "./notification.service";
 export class HttpError extends Error {
   statusCode: number;
   constructor(message: string, statusCode = 400) {
@@ -259,6 +260,8 @@ export const updateProduit = async (
   }
 
   const updatedProduit = await prisma.$transaction(async (tx) => {
+    const prevProduit = await tx.produit.findUnique({ where: { idProduit: id }, select: { stock: true } });
+
     const updated = await tx.produit.update({
       where: { idProduit: id },
       data: {
@@ -282,6 +285,19 @@ export const updateProduit = async (
         fournisseurs: true,
       },
     });
+    if (data.stock !== undefined) {
+      const prevStock = prevProduit?.stock ?? produit.stock;
+      const newStock = updated.stock;
+      if (prevStock === 0 && newStock > 0) {
+        try {
+          await restockNotification(tx, [id]);
+        } catch (err) {
+          console.error("Failed to resolve restock notifications for produit", id, err);
+        }
+      }
+    }
+
+
     return updated;
   });
   await prisma.historique.create({
@@ -306,8 +322,8 @@ export const deleteProduit = async (id: string, utilisateurId: number) => {
 
   const images: string[] = Array.isArray(produit.images)
     ? (produit.images as any[])
-        .map((img) => (typeof img === "string" ? img : ""))
-        .filter((img) => !!img)
+      .map((img) => (typeof img === "string" ? img : ""))
+      .filter((img) => !!img)
     : [];
   const uploadPath = path.join(process.cwd(), "uploads", "produits");
 

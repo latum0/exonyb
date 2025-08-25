@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { CreateCommandeDto, GetCommandesQueryDto, UpdateCommandeDto } from "../dto/commande.dto";
-import { createCommande, deleteCommande, getCommandeById, getCommandes, updateCommande } from "../services/commande.service";
+import { createCommande, deleteCommande, getCommandeById, getCommandes, updateCommande, updateCommandeMontantT } from "../services/commande.service";
 import { BadRequestError } from "../utils/errors";
 
 
@@ -82,4 +82,26 @@ export async function updateCommandeController(req: Request, res: Response, next
 
     res.status(result.statusCode || 200).json(result.data);
 
+}
+
+
+export async function updateCommandeMontantController(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    const idCommande = req.params.id;
+    if (!idCommande) return next(new BadRequestError("Missing commande id in params"));
+    const { montantT } = req.body as { montantT?: string | number };
+
+    if (montantT === null || montantT === undefined) {
+        return next(new BadRequestError("Missing montantT in body"));
+    }
+    const utilisateur = (req as any).user;
+    const utilisateurId = utilisateur?.id as number | undefined;
+    const montantTStr = typeof montantT === "string" ? montantT : String(montantT);
+
+    const result = await updateCommandeMontantT(idCommande, montantTStr, utilisateurId);
+
+    res.status(result.statusCode || 200).json(result.data);
 }

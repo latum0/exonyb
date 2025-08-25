@@ -95,7 +95,7 @@ export async function updateLigneQuantity(
             where: { idProduit: produitId, stock: { gte: delta } },
             data: { stock: { decrement: delta } }
         });
-        if (res.count === 0) throw new BadRequestError("Stock insuffisant for produit " + produitId);
+        if (res.count === 0) throw new BadRequestError("Stock insuffisant pour le produit " + produitId);
 
         try {
             await createStockNotificationsIfNeeded(tx, [produitId], { trigger: `updateLigne:${commandeId}`, utilisateurId });

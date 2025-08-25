@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { NotificationListResponseDto, NotificationResponseDto } from "../dto/response.dto";
+import { NotificationResponseDto } from "../dto/response.dto";
 import { ensureExists } from "../utils/helpers";
 import prisma from "../prisma";
 import { NotificationQueryDto } from "../dto/notification.dto";
@@ -106,72 +106,24 @@ export async function getNotificationById(
 
     return { statusCode: 200, data: dto };
 }
+export async function getNotifications() {
+    const items = await prisma.notification.findMany({
+        orderBy: { createdAt: "desc" },
+        select: {
+            id: true,
+            produitId: true,
+            type: true,
+            message: true,
+            createdAt: true,
+            resolved: true,
+        },
+    });
 
-export async function getNotifications(
-    query: NotificationQueryDto
-): Promise<ServiceResponse<NotificationListResponseDto>> {
-    const page = query.page && query.page > 0 ? query.page : 1;
-    const limit = query.limit && query.limit > 0 ? query.limit : 25;
-    const skip = (page - 1) * limit;
 
-    const where: any = {};
-    if (query.type) where.type = query.type;
-    if (query.produitId) where.produitId = query.produitId;
 
-    if (query.resolved !== undefined && query.resolved !== null && query.resolved !== "") {
-        const val = query.resolved;
-        let resolvedBool: boolean | undefined;
-        if (typeof val === "boolean") resolvedBool = val;
-        else if (typeof val === "string") {
-            const v = val.toLowerCase();
-            resolvedBool = v === "true" || v === "1";
-        }
-        if (resolvedBool !== undefined) where.resolved = resolvedBool;
-    }
-
-    if (query.dateFrom || query.dateTo) {
-        where.createdAt = {};
-        if (query.dateFrom) where.createdAt.gte = query.dateFrom;
-        if (query.dateTo) where.createdAt.lte = query.dateTo;
-    }
-
-    const orderByField = query.orderBy ?? "createdAt";
-    const orderDir = query.orderDir ?? "desc";
-
-    const [total, items] = await prisma.$transaction([
-        prisma.notification.count({ where }),
-        prisma.notification.findMany({
-            where,
-            orderBy: { [orderByField]: orderDir },
-            skip,
-            take: limit,
-            select: { id: true, produitId: true, type: true, message: true, createdAt: true, resolved: true }
-        })
-    ]);
-
-    const mapped = items.map((i) => ({
-        id: i.id,
-        produitId: i.produitId,
-        type: i.type as any,
-        message: i.message,
-        createdAt: i.createdAt,
-        resolved: i.resolved
-    })) as NotificationResponseDto[];
-
-    const meta = {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-    };
-
-    const listDto: NotificationListResponseDto = {
-        items: mapped,
-        meta
-    };
-
-    return { statusCode: 200, data: listDto };
+    return { statusCode: 200, data: items };
 }
+
 
 export async function deleteNotification(
     id: string,
