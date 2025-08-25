@@ -18,7 +18,7 @@ export async function createClientController(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-
+  
   const dto = req.body as CreateClientDto;
   const userId = (req.user as { sub: number }).sub;
 

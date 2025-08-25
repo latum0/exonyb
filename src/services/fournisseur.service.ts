@@ -117,7 +117,7 @@ export async function deleteFournisseur(
     id: number,
     utilisateurId: number
 ): Promise<ServiceResponse<null>> {
-    await ensureExists(
+    const four = await ensureExists(
         () => prisma.fournisseur.findUnique({ where: { idFournisseur: id } }),
         "Fournisseur"
     );
@@ -135,7 +135,7 @@ export async function deleteFournisseur(
         await createHistoriqueService(
             tx,
             utilisateurId,
-            `Suppression du fournisseur ${deleted.nom} (ID=${deleted.idFournisseur})`
+            `Suppression du fournisseur ${four.nom} (ID=${four.idFournisseur})`
         );
     });
 

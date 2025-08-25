@@ -1,0 +1,86 @@
+import { NextFunction, Request, Response } from "express";
+import { CreateCommandeDto, UpdateCommandeDto } from "../dto/commande.dto";
+import { createCommande, deleteCommande, getCommandeById, getCommandes, updateCommande } from "../services/commande.service";
+import { BadRequestError } from "../../utils/errors";
+import { GetCommandesQueryDto } from "../dto/commande-filter.dto";
+
+
+
+
+
+export async function createCommandeController(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    try {
+        const dto = req.body as CreateCommandeDto;
+        const userId = (req.user as { sub: number }).sub;
+        const { statusCode, data, error, message } = await createCommande(dto, userId);
+        res.status(statusCode).json({ data, message, error });
+    } catch (err) {
+        next(err);
+    }
+}
+export async function getCommandeByIdController(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { id } = req.params;
+    if (!/^[0-9a-fA-F-]{36}$/.test(id)) {
+        throw new BadRequestError("Invalid idCommande");
+    }
+    const { statusCode, data, error } = await getCommandeById(id)
+    res.status(statusCode).json({ data, error })
+}
+
+export async function getAllCommandesController(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+
+    const filter = req.query as unknown as GetCommandesQueryDto;
+
+    const { statusCode, data } = await getCommandes(filter);
+    res.status(statusCode).json(data);
+
+}
+
+export async function deleteCommandeController(
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> {
+    try {
+        const { id } = req.params;
+
+        if (!/^[0-9a-fA-F-]{36}$/.test(id)) {
+            throw new BadRequestError("Invalid idCommande");
+        }
+
+        const userId = (req.user as { sub: number }).sub;
+
+        const { statusCode, message } = await deleteCommande(id, userId);
+        res.status(statusCode).json({ message });
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+
+
+export async function updateCommandeController(req: Request, res: Response, next: NextFunction): Promise<void> {
+
+    const idCommande = req.params.id;
+    if (!idCommande) return next(new BadRequestError("Missing commande id in params"));
+
+    const body = req.body as UpdateCommandeDto;
+
+    const utilisateur = (req as any).user;
+
+    const utilisateurId = utilisateur.id as number;
+
+    const result = await updateCommande(idCommande, body, utilisateurId);
+
+    res.status(result.statusCode || 200).json(result.data);
+
+}

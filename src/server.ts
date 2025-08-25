@@ -12,8 +12,12 @@ import fournisseursRoutes from "./routes/fournisseur.route"
 import { errorHandler } from "../middlewares/error-handler";
 import retoursRoutes from "./routes/retour.route"
 import historiquesRoutes from "./routes/historique.route";
-import cron from "node-cron";
-import { deleteOldHistoriques } from "./services/historique.service";
+import commandesRoutes from "./routes/commande.route";
+import ligneRoutes from "./routes/ligneCommande.route";
+import notifRoutes from "./routes/notification.route";
+
+
+import { scheduleHistoriqueCleanup } from "./jobs/historiqueCleanup";
 
 
 const app: Application = express();
@@ -34,22 +38,19 @@ app.use("/clients", clientsRoutes);
 app.use("/fournisseurs", fournisseursRoutes)
 app.use("/retours", retoursRoutes)
 app.use("/historiques", historiquesRoutes);
+app.use("/commandes", commandesRoutes);
+app.use("/lignes", ligneRoutes);
+app.use("/notification", notifRoutes);
+
+
+
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 
 app.use("/", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
 
-cron.schedule("0 0 * * *", async () => {
-  try {
-    const result = await deleteOldHistoriques();
-    if (result.count > 0) {
-      console.log(`Deleted ${result.count} historiques older than 7 days.`);
-    }
-  } catch (err) {
-    console.error("Error running historique cleanup job:", err);
-  }
-});
+scheduleHistoriqueCleanup(process.env.HISTO_CLEANUP_CRON);
 
 const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, () => {

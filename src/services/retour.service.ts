@@ -172,7 +172,7 @@ export async function deleteRetour(
     id: number,
     utilisateurId: number
 ): Promise<ServiceResponse<null>> {
-    await ensureExists(
+    const retour = await ensureExists(
         () => prisma.retour.findUnique({ where: { idRetour: id } }),
         "Retour"
     );
@@ -182,7 +182,7 @@ export async function deleteRetour(
         await createHistoriqueService(
             tx,
             utilisateurId,
-            `Suppression du retour ID=${deleted.idRetour}`
+            `Suppression du retour ID=${retour.idRetour}`
         );
     });
     return { statusCode: 200, message: "Retour supprimé avec succès." };
