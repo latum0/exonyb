@@ -26,7 +26,17 @@ export async function createHistoriqueService(
 
 export async function getHistoriqueById(id: number) {
   const historique = await ensureExists(
-    () => prisma.historique.findUnique({ where: { idHistorique: id } }),
+    () =>
+      prisma.historique.findUnique({
+        where: { idHistorique: id },
+        include: {
+          utilisateur: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
     "Historique"
   );
   return { statusCode: 200, data: historique };
@@ -125,7 +135,11 @@ export async function deleteHistoriqueById(
   );
 
   await prisma.$transaction(async (tx) => {
-    await createHistoriqueService(tx, utilisateurId, `Historique ${id} supprimé`)
+    await createHistoriqueService(
+      tx,
+      utilisateurId,
+      `Historique ${id} supprimé`
+    );
     await tx.historique.delete({
       where: { idHistorique: id },
     });

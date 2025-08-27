@@ -5,6 +5,7 @@ import {
   getProfile,
   handleChangePassword,
   loginAdminHandler,
+  logoutController,
   refreshToken,
   resetPasswordController,
   verifyEmailController,
@@ -219,4 +220,25 @@ router.get(
 
   getProfile
 );
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Déconnexion
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *       401:
+ *         description: Non autorisé
+ */
+router.post(
+  "/logout",
+  authMiddleware,
+  //@ts-ignore
+  logoutController
+);
+
 export default router;

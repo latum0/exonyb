@@ -179,6 +179,13 @@ export const changePassword = async (
 
   return { statusCode: 200, message: "Mot de passe modifié avec succès" };
 };
+export const logout = async (userId: number) => {
+  return prisma.users.update({
+    where: { id: userId },
+    data: { refreshToken: null },
+  });
+};
+
 export const getUserProfileService = async (userId: number) => {
   const user = await prisma.users.findUnique({
     where: { id: userId },

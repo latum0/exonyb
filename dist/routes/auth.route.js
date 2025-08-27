@@ -34,9 +34,12 @@ const router = (0, express_1.Router)();
  *       401:
  *         description: Invalid credentials
  */
-router.post("/login", 
-//@ts-ignore
-(0, validateDto_1.validateDto)(auth_dto_1.LoginDto), auth_controller_1.loginAdminHandler);
+router.post(
+  "/login",
+  //@ts-ignore
+  (0, validateDto_1.validateDto)(auth_dto_1.LoginDto),
+  auth_controller_1.loginAdminHandler
+);
 /**
  * @swagger
  * /auth/refresh:
@@ -77,9 +80,11 @@ router.post("/login",
  *                   type: string
  *                   example: Invalid or expired refresh token
  */
-router.post("/refresh", 
-//@ts-ignore
-auth_controller_1.refreshToken);
+router.post(
+  "/refresh",
+  //@ts-ignore
+  auth_controller_1.refreshToken
+);
 /**
  * @openapi
  * /auth/verify-email:
@@ -102,9 +107,11 @@ auth_controller_1.refreshToken);
  *       404:
  *         description: Utilisateur introuvable
  */
-router.get("/verify-email", 
-//@ts-ignore
-auth_controller_1.verifyEmailController);
+router.get(
+  "/verify-email",
+  //@ts-ignore
+  auth_controller_1.verifyEmailController
+);
 /**
  * @swagger
  * /auth/forgot-password:
@@ -123,7 +130,11 @@ auth_controller_1.verifyEmailController);
  *       404:
  *         description: Utilisateur non trouvé
  */
-router.post("/forgot-password", (0, validateDto_1.validateDto)(auth_dto_1.ForgotPasswordDto), auth_controller_1.forgotPassword);
+router.post(
+  "/forgot-password",
+  (0, validateDto_1.validateDto)(auth_dto_1.ForgotPasswordDto),
+  auth_controller_1.forgotPassword
+);
 /**
  * @swagger
  * /auth/reset-password:
@@ -168,9 +179,12 @@ router.post("/reset-password", auth_controller_1.resetPasswordController);
  *       401:
  *         description: Non autorisé
  */
-router.post("/change-password", authMiddleware_1.authMiddleware, 
-//@ts-ignore
-auth_controller_1.handleChangePassword);
+router.post(
+  "/change-password",
+  authMiddleware_1.authMiddleware,
+  //@ts-ignore
+  auth_controller_1.handleChangePassword
+);
 /**
  * @swagger
  * /auth/profile:
@@ -189,5 +203,9 @@ auth_controller_1.handleChangePassword);
  *       401:
  *         description: Non autorisé
  */
-router.get("/profile", authMiddleware_1.authMiddleware, auth_controller_1.getProfile);
+router.get(
+  "/profile",
+  authMiddleware_1.authMiddleware,
+  auth_controller_1.getProfile
+);
 exports.default = router;
