@@ -5,6 +5,7 @@ import {
   getProfile,
   handleChangePassword,
   loginAdminHandler,
+  logoutController,
   refreshToken,
   resetPasswordController,
   updateProfileController,
@@ -223,7 +224,65 @@ router.get(
   getProfile
 );
 
+/**
+ * @swagger
+ * /auth/profile:
+ *   patch:
+ *     summary: Met à jour le profil de l'utilisateur authentifié
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateProfileDto'
+ *           example:
+ *             name: "Ali Ben"
+ *             email: "ali.ben@example.com"
+ *             phone: "+213612345678"
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Bad request (invalid body)
+ *       401:
+ *         description: Non autorisé
+ *       409:
+ *         description: Conflit (email ou téléphone déjà utilisé)
+ *       422:
+ *         description: Erreur de validation (format email/téléphone invalide)
+ *       500:
+ *         description: Internal server error
+ */
+
 
 router.patch("/profile", authMiddleware, validateDto(UpdateProfileDto), asyncWrapper(updateProfileController))
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Déconnexion
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *       401:
+ *         description: Non autorisé
+ */
+router.post(
+  "/logout",
+  authMiddleware,
+  //@ts-ignore
+  logoutController
+);
 
 export default router;

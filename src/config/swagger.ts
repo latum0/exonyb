@@ -193,6 +193,47 @@ const options = {
           },
         },
 
+        // ------------ Profile / Auth related schemas (ADDED) ------------
+        UpdateProfileDto: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "Optional display name",
+              example: "Ali Ben"
+            },
+            email: {
+              type: "string",
+              format: "email",
+              description: "Optional email (must be unique)",
+              example: "ali.ben@example.com"
+            },
+            phone: {
+              type: "string",
+              description: "Optional Algerian phone number. Accepts +213... or 0... formats.",
+              example: "+213612345678",
+              pattern: "^(\\+213|0)(5|6|7)[0-9]{8}$"
+            }
+          },
+          additionalProperties: false
+        },
+
+        User: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 1 },
+            name: { type: "string", example: "Ali Ben" },
+            email: { type: "string", format: "email", example: "ali.ben@example.com" },
+            phone: { type: "string", example: "+213612345678" },
+            role: { type: "string", example: "USER" },
+            permissions: { type: "object", nullable: true, example: null },
+            emailVerified: { type: "boolean", example: false },
+            createdAt: { type: "string", format: "date-time", example: "2025-08-29T12:00:00Z" },
+            updatedAt: { type: "string", format: "date-time", example: "2025-08-29T12:05:00Z" }
+          },
+          required: ["id", "email", "name"]
+        },
+
         ErrorResponse: {
           type: "object",
           properties: {

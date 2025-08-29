@@ -8,6 +8,7 @@ import {
   resetPassword,
   updateUserProfile,
   verifyEmailService,
+  logout,
 } from "../services/auth.service";
 import { sendResetPasswordEmail } from "../utils/email";
 import { plainToInstance } from "class-transformer";
@@ -176,7 +177,17 @@ export const getProfile = async (
   }
 };
 
+export const logoutController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.sub;
+    await logout(Number(userId));
 
+    return res.status(200).json({ message: "Déconnexion réussie" });
+  } catch (error: any) {
+    console.error("Erreur logout:", error);
+    return res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
 export async function updateProfileController(req: Request, res: Response): Promise<void> {
 
