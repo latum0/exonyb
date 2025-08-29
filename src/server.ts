@@ -9,7 +9,7 @@ import path from "path";
 import cors from "cors";
 import clientsRoutes from "./routes/clients.route";
 import fournisseursRoutes from "./routes/fournisseur.route";
-
+import statistiquesRoutes from "./routes/statistique.route";
 import retoursRoutes from "./routes/retour.route";
 import historiquesRoutes from "./routes/historique.route";
 import commandesRoutes from "./routes/commande.route";
@@ -40,6 +40,8 @@ app.use("/commandes", commandesRoutes);
 app.use("/lignes", ligneRoutes);
 app.use("/notifications", notifRoutes);
 app.use("/produits", produitsRoutes);
+app.use("/statistiques", statistiquesRoutes);
+
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));

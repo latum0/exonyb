@@ -9,16 +9,14 @@ import {
   deleteClient,
 } from "../services/clients.service";
 import { ClientFilterDto } from "../dto/client-filter.dto";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
 
 export async function createClientController(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  
+
   const dto = req.body as CreateClientDto;
   const userId = (req.user as { sub: number }).sub;
 

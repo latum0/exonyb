@@ -47,11 +47,8 @@ export async function createClient(
     throw err;
   }
 }
-
 export async function getAllClients(filter: ClientFilterDto = {}) {
   const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
-  const page = filter.page ? parseInt(filter.page as any) : 1;
-  const skip = (page - 1) * perPage;
 
   const baseWhere: any = {};
 
@@ -59,8 +56,13 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   if (filter.prenom) baseWhere.prenom = filter.prenom;
   if (filter.adresse) baseWhere.adresse = filter.adresse;
   if (filter.email) baseWhere.email = filter.email;
-  if (filter.numeroTelephone)
+
+  if (filter.phonePrefix) {
+    baseWhere.numeroTelephone = { startsWith: filter.phonePrefix };
+  } else if (filter.numeroTelephone) {
     baseWhere.numeroTelephone = filter.numeroTelephone;
+  }
+
   if (filter.search) {
     baseWhere.OR = [
       { nom: { contains: filter.search } },
@@ -80,37 +82,48 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
     statut: statutCondition,
   };
 
+  const cursorNom = filter.cursorNom || null;
+  const cursorId = filter.cursorId ? Number(filter.cursorId) : null;
+
+  const keysetWhere = { ...where };
+  if (cursorNom !== null && cursorId !== null) {
+    keysetWhere.OR = [
+      { nom: { gt: cursorNom } },
+      { AND: [{ nom: { equals: cursorNom } }, { idClient: { gt: cursorId } }] },
+    ];
+  }
+
   try {
-    const [total, clients] = await Promise.all([
-      prisma.client.count({ where }),
-      prisma.client.findMany({
-        where,
-        skip,
-        take: perPage,
-        orderBy: { nom: "asc" },
-        include: {
-          commentaires: {
-            take: 5,
-            orderBy: { dateCreated: "desc" },
-          },
+    const clients = await prisma.client.findMany({
+      where: keysetWhere,
+      take: perPage,
+      orderBy: [{ nom: "asc" }, { idClient: "asc" }],
+      include: {
+        commentaires: {
+          take: 5,
+          orderBy: { dateCreated: "desc" },
         },
-      }),
-    ]);
+      },
+    });
+
+    let nextCursor = null;
+    if (clients.length > 0) {
+      const last = clients[clients.length - 1];
+      nextCursor = { cursorNom: last.nom, cursorId: last.idClient };
+    }
 
     return {
       statusCode: 200,
       data: {
         data: clients,
         meta: {
-          total,
-          page,
           perPage,
-          totalPages: Math.ceil(total / perPage),
+          nextCursor,
         },
       },
     };
   } catch (e) {
-    console.error("Error in getAllClients:", e);
+    console.error("Error in getAllClientsKeyset:", e);
     throw e;
   }
 }

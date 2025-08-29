@@ -4,6 +4,7 @@ import {
   MinLength,
   Matches,
   IsNotEmpty,
+  IsOptional,
 } from "class-validator";
 
 /**
@@ -53,4 +54,21 @@ export class ChangePasswordDto {
     message: "Le mot de passe doit contenir un caractère spécial",
   })
   newPassword!: string;
+}
+
+export class UpdateProfileDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
+    message: "Numéro de téléphone algérien invalide",
+  })
+  phone?: string;
 }

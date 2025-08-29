@@ -8,6 +8,8 @@ import {
 } from "../controllers/ligneCommande.controller";
 import { checkPermissions, Permission } from "../middlewares/permissions";
 import { requireAdmin } from "../middlewares/requireAdmin";
+import { validateDtoClient } from "../middlewares/validateDtoClient";
+import { UpdatePrixUnitaireLigneDto } from "../dto/ligneCommande.dto";
 
 const route = Router();
 
@@ -51,7 +53,7 @@ const route = Router();
  *       '404':
  *         description: 'Ligne non trouvée'
  */
-route.patch("/:id", authMiddleware, requireAdmin, asyncWrapper(updateLignePrixUnitaireController));
+route.patch("/:id", authMiddleware, requireAdmin, validateDtoClient(UpdatePrixUnitaireLigneDto), asyncWrapper(updateLignePrixUnitaireController));
 
 /**
  * @swagger

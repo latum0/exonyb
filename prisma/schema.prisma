@@ -57,9 +57,14 @@ model Client {
   email           String       @unique
   numeroTelephone String       @unique
   statut          ClientStatut @default(ACTIVE)
+  dateCreated     DateTime     @default(now())
 
   commentaires Commentaire[]
   commandes    Commande[]
+
+  @@index([statut, nom, idClient])
+  @@index([nom])
+  @@index([numeroTelephone])
 }
 
 model Commentaire {
@@ -86,6 +91,7 @@ model Commande {
   retour         Retour?
 
   @@index([clientId])
+  @@index([dateCommande])
 }
 
 model LigneCommande {

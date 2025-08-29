@@ -33,6 +33,7 @@ export async function createRetour(
           commande: { connect: { idCommande: data.commandeId } },
         },
       });
+      tx.commande.update({ where: { idCommande: data.commandeId }, data: { statut: "RETORNÉE" } })
 
       await createHistoriqueService(
         tx,
@@ -165,16 +166,17 @@ export async function updateRetour(
 }
 
 export async function deleteRetour(
-  id: number,
+  idRetour: number,
   utilisateurId: number
 ): Promise<ServiceResponse<null>> {
-  await ensureExists(
-    () => prisma.retour.findUnique({ where: { idRetour: id } }),
+  const retour = await ensureExists(
+    () => prisma.retour.findUnique({ where: { idRetour } }),
     "Retour"
   );
 
   await prisma.$transaction(async (tx) => {
-    const deleted = await tx.retour.delete({ where: { idRetour: id } });
+    const deleted = await tx.retour.delete({ where: { idRetour } });
+    await tx.commande.update({ where: { idCommande: retour.commandeId }, data: { statut: "EN ATTENTE" } })
     await createHistoriqueService(
       tx,
       utilisateurId,

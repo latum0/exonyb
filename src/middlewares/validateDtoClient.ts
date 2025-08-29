@@ -6,39 +6,38 @@ import { validate, ValidationError as ClassValidatorError } from "class-validato
 import { Request, Response, NextFunction } from "express";
 import { ValidationError } from "../utils/errors";
 
-export const validateDtoClient = (DtoClass: any) => {
+export const validateDtoClient = (DtoClass: any, source: "body" | "query" = "body") => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            const data = source === "query" ? req.query : req.body;
+            const dtoObject = plainToInstance(DtoClass, data);
 
-        const dtoObject = plainToInstance(DtoClass, req.body);
+            const errors = await validate(dtoObject, {
+                whitelist: true,
+                forbidNonWhitelisted: true,
+                forbidUnknownValues: true,
+            });
 
+            if (errors.length > 0) {
+                const flatten = (errs: ClassValidatorError[]): string[] =>
+                    errs.flatMap(err => [
+                        ...(err.constraints ? Object.values(err.constraints) : []),
+                        ...(err.children?.length ? flatten(err.children) : []),
+                    ]);
 
-        const errors = await validate(dtoObject, {
-            whitelist: true,
-            forbidNonWhitelisted: true,
-            forbidUnknownValues: true,
-        });
+                const details = flatten(errors);
+                return next(new ValidationError("Validation failed", details));
+            }
 
-        if (errors.length > 0) {
+            if (source === "query") {
+                req.query = dtoObject as any;
+            } else {
+                req.body = dtoObject;
+            }
 
-            const flatten = (errs: ClassValidatorError[]): string[] =>
-                errs.reduce<string[]>((acc, err) => {
-                    if (err.constraints) {
-                        acc.push(...Object.values(err.constraints));
-                    }
-                    if (err.children?.length) {
-                        acc.push(...flatten(err.children));
-                    }
-                    return acc;
-                }, []);
-
-            const details = flatten(errors);
-
-
-            throw new ValidationError("Validation failed", details);
+            return next();
+        } catch (err) {
+            return next(err);
         }
-
-
-        req.body = dtoObject;
-        next();
     };
 };

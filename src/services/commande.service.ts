@@ -118,7 +118,6 @@ export async function createCommande(
       produitId: l.produitId,
       quantite: l.quantite,
       prixUnitaire: (l.prixUnitaire as any)?.toString ? (l.prixUnitaire as any).toString() : String(l.prixUnitaire),
-      commandeId: createdCommande.idCommande
     }))
   };
 

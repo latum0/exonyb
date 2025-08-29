@@ -6,11 +6,12 @@ import {
   loginUser,
   refreshAccessToken,
   resetPassword,
+  updateUserProfile,
   verifyEmailService,
 } from "../services/auth.service";
 import { sendResetPasswordEmail } from "../utils/email";
 import { plainToInstance } from "class-transformer";
-import { ChangePasswordDto } from "../dto/auth.dto";
+import { ChangePasswordDto, UpdateProfileDto } from "../dto/auth.dto";
 import { validateOrReject, ValidationError } from "class-validator";
 
 export const loginAdminHandler = async (
@@ -174,3 +175,19 @@ export const getProfile = async (
     next(error);
   }
 };
+
+
+
+export async function updateProfileController(req: Request, res: Response): Promise<void> {
+
+  const userId = (req as any).user?.sub ?? (req as any).userId;
+  if (!userId) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const dto = req.body as UpdateProfileDto;
+  const serviceResp: ServiceResponse<any> = await updateUserProfile(userId, dto);
+
+  res.status(serviceResp.statusCode).json({ data: serviceResp.data, message: serviceResp.message ?? "Updated" });
+
+}

@@ -7,12 +7,15 @@ import {
   loginAdminHandler,
   refreshToken,
   resetPasswordController,
+  updateProfileController,
   verifyEmailController,
 } from "../controllers/auth.controller";
-import { ForgotPasswordDto, LoginDto } from "../dto/auth.dto";
+import { ForgotPasswordDto, LoginDto, UpdateProfileDto } from "../dto/auth.dto";
 import { validateDto } from "../middlewares/validateDto";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { swaggerRouteDoc } from "../utils/waggerHelpers";
+import { updateUserProfile } from "../services/auth.service";
+import { asyncWrapper } from "../utils/asyncWrapper";
 
 const router = Router();
 
@@ -219,4 +222,8 @@ router.get(
 
   getProfile
 );
+
+
+router.patch("/profile", authMiddleware, validateDto(UpdateProfileDto), asyncWrapper(updateProfileController))
+
 export default router;

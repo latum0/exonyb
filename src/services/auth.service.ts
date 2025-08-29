@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Role, Users } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   generateEmailVerificationToken,
@@ -7,7 +7,11 @@ import {
 } from "../utils/tokens";
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../utils/email";
-import { ChangePasswordDto } from "../dto/auth.dto";
+import { ChangePasswordDto, UpdateProfileDto } from "../dto/auth.dto";
+import { ensureExists, ensureUnique, stripNullish } from "../utils/helpers";
+import { ConflictError } from "../utils/errors";
+import { UserResponseDto } from "../dto/response.dto";
+import { createHistoriqueService } from "./historique.service";
 const prisma = new PrismaClient();
 const accessSecret = process.env.JWT_ACCESS_SECRET!;
 export async function loginUser(email: string, password: string) {
@@ -203,3 +207,82 @@ export const getUserProfileService = async (userId: number) => {
     data: user,
   };
 };
+
+
+
+
+
+export async function updateUserProfile(
+  idUser: number,
+  dto: UpdateProfileDto
+): Promise<ServiceResponse<UserResponseDto>> {
+  const existedUser = await ensureExists(
+    () => prisma.users.findUnique({ where: { id: idUser } }),
+    "User"
+  );
+
+  const normalized: Partial<UpdateProfileDto> = {
+    ...(typeof dto.name !== "undefined" ? { name: String(dto.name).trim() } : {}),
+    ...(typeof dto.email !== "undefined"
+      ? { email: String(dto.email).trim().toLowerCase() }
+      : {}),
+    ...(typeof dto.phone !== "undefined" ? { phone: String(dto.phone).trim() } : {}),
+  };
+  const payload = stripNullish(normalized);
+  if (Object.keys(payload).length === 0) {
+    return { statusCode: 200, data: { name: existedUser.name, email: existedUser.email, phone: existedUser.phone }, message: "Aucune modification fournie." };
+  }
+
+  if (payload.email) {
+    const other = await prisma.users.findFirst({
+      where: { email: payload.email, NOT: { id: idUser } },
+    });
+    if (other) throw new ConflictError("Cette adresse e-mail est déjà utilisée.");
+  }
+  if (payload.phone) {
+    const other = await prisma.users.findFirst({
+      where: { phone: payload.phone, NOT: { id: idUser } },
+    });
+    if (other) throw new ConflictError("Ce numéro de téléphone est déjà utilisé.");
+  }
+
+  const emailChanged = typeof payload.email !== "undefined" && payload.email !== existedUser.email;
+
+  const updateData: any = { ...payload };
+  if (emailChanged) updateData.emailVerified = false;
+
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const user = await tx.users.update({
+        where: { id: idUser },
+        data: updateData,
+        select: { id: true, name: true, email: true, phone: true },
+      });
+
+      await createHistoriqueService(tx, idUser, emailChanged ? "EMAIL_CHANGED" : "PROFILE_UPDATED")
+
+      return user;
+    });
+
+    if (emailChanged) {
+      const verifToken = jwt.sign({ sub: updated.id, email: updated.email }, accessSecret, { expiresIn: "1d" });
+      try {
+        await sendVerificationEmail(updated.email, verifToken);
+      } catch (mailErr) {
+        console.error("Failed to send verification email:", mailErr);
+      }
+    }
+
+    return { statusCode: 200, data: { name: updated.name, email: updated.email, phone: updated.phone }, message: "Profil mis à jour avec succès" };
+  } catch (err: any) {
+    if (err?.code === "P2002" && err?.meta?.target?.includes("email")) {
+      return { statusCode: 409, error: "Cette adresse e-mail est déjà utilisée." };
+    }
+    if (err?.code === "P2002" && err?.meta?.target?.includes("phone")) {
+      return { statusCode: 409, error: "Ce numéro de téléphone est déjà utilisé." };
+    }
+
+    console.error(err);
+    return { statusCode: 500, error: "Erreur lors de la mise à jour du profil." };
+  }
+}

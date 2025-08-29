@@ -58,7 +58,7 @@ export async function deleteFromBlacklist(
       where: { idClient: id },
       data: { statut: ClientStatut.ACTIVE },
     });
-    await updateCommandeStatut(tx, id, "PENDING");
+    await updateCommandeStatut(tx, id, "EN ATTENTE");
 
     await createHistoriqueService(
       tx,
