@@ -104,6 +104,7 @@ export async function RetoursParProduitParDate(
   return { statusCode: 200, data: { percentage, retourCountWindow, retourCountTotal } };
 }
 
+
 export async function RetoursParDateParProduit(
   query: StatistiquesRetourDto
 ): Promise<ServiceResponse<{ percentage: number; retourCountWindow: number; commandeCountTotal: number }>> {

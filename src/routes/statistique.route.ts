@@ -7,13 +7,6 @@ import {
     getPourcentageRetoursParProduitController,
     getPourcentageRetoursCommandeController,
 } from "../controllers/statistique.controller";
-import { validateDtoClient } from "../middlewares/validateDtoClient";
-import {
-    StatistiquesClientDto,
-    StatistiquesCommandeDto,
-    StatistiquesRetourDto,
-} from "../dto/statistiques.dto";
-
 const route = Router();
 
 /**
@@ -156,7 +149,6 @@ const route = Router();
 route.get(
     "/commande",
     authMiddleware,
-    validateDtoClient(StatistiquesCommandeDto, "query"),
     asyncWrapper(getCommandeStatsController)
 );
 
@@ -238,7 +230,6 @@ route.get(
 route.get(
     "/client",
     authMiddleware,
-    validateDtoClient(StatistiquesClientDto, "query"),
     asyncWrapper(getPourcentageClientsParProduitController)
 );
 
@@ -305,7 +296,6 @@ route.get(
 route.get(
     "/retour",
     authMiddleware,
-    validateDtoClient(StatistiquesRetourDto, "query"),
     asyncWrapper(getPourcentageRetoursParProduitController)
 );
 
@@ -372,7 +362,6 @@ route.get(
 route.get(
     "/retour/commande",
     authMiddleware,
-    validateDtoClient(StatistiquesRetourDto, "query"),
     asyncWrapper(getPourcentageRetoursCommandeController)
 );
 
