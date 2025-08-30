@@ -5,7 +5,6 @@ import {
     getNotificationsController,
 } from "../controllers/notification.controller";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { requireAdmin } from "../middlewares/requireAdmin";
 import { asyncWrapper } from "../utils/asyncWrapper";
 
 const route = Router();
@@ -31,7 +30,7 @@ const route = Router();
  *       '403':
  *         description: 'Accès interdit (ADMIN requis)'
  */
-route.get("/", authMiddleware, requireAdmin, asyncWrapper(getNotificationsController));
+route.get("/", authMiddleware, asyncWrapper(getNotificationsController));
 
 /**
  * @swagger
@@ -63,7 +62,7 @@ route.get("/", authMiddleware, requireAdmin, asyncWrapper(getNotificationsContro
  *       '404':
  *         description: 'Notification non trouvée'
  */
-route.get("/:id", authMiddleware, requireAdmin, asyncWrapper(getNotificationByIdController));
+route.get("/:id", authMiddleware, asyncWrapper(getNotificationByIdController));
 
 /**
  * @swagger
@@ -99,6 +98,6 @@ route.get("/:id", authMiddleware, requireAdmin, asyncWrapper(getNotificationById
  *       '404':
  *         description: 'Notification non trouvée'
  */
-route.delete("/:id", authMiddleware, requireAdmin, asyncWrapper(deleteNotificationController));
+route.delete("/:id", authMiddleware, asyncWrapper(deleteNotificationController));
 
 export default route;

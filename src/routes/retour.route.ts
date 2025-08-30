@@ -200,7 +200,8 @@ router.get(
 router.post(
   "/filter",
   authMiddleware,
-  requireAdmin,
+  //@ts-ignore
+  checkPermissions([Permission.SAV, Permission.AGENT_DE_STOCK]),
   validateDtoClient(RetourFilterDto),
   asyncWrapper(filterRetoursController)
 );

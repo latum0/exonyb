@@ -322,7 +322,7 @@ route.patch("/:id", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]),
  *       '404':
  *         description: Commande non trouvée
  */
-route.patch("/:id/montant", authMiddleware, requireAdmin, asyncWrapper(updateCommandeMontantController))
+route.patch("/:id/montant", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]), asyncWrapper(updateCommandeMontantController))
 
 
 

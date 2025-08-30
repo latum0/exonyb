@@ -159,7 +159,7 @@ router.get(
 router.get(
   "/blacklist/:id",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.SAV]),
   asyncWrapper(getBlacklistedClientsByIdController)
 );
 
@@ -284,7 +284,7 @@ router.post(
   "/",
   authMiddleware,
   //@ts-ignore
-  checkPermissions([Permission.SAV]),
+  checkPermissions([Permission.SAV, Permission.CONFIRMATEUR]),
   validateDtoClient(CreateClientDto),
   asyncWrapper(createClientController)
 );
@@ -417,7 +417,7 @@ router.post(
 router.get(
   "/",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.SAV, Permission.CONFIRMATEUR]),
   asyncWrapper(getAllClientsController)
 );
 
@@ -541,7 +541,7 @@ router.get(
 router.post(
   "/filter",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.SAV, Permission.CONFIRMATEUR]),
   validateDtoClient(ClientFilterDto),
   asyncWrapper(filterClientsController)
 );
@@ -623,7 +623,7 @@ router.post(
 router.get(
   "/:id",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.SAV, Permission.CONFIRMATEUR]),
   asyncWrapper(getClientByIdController)
 );
 
@@ -747,7 +747,7 @@ router.patch(
   "/:id",
   authMiddleware,
   //@ts-ignore
-  checkPermissions([Permission.SAV]),
+  checkPermissions([Permission.SAV], [Permission.CONFIRMATEUR]),
   validateDtoClient(UpdateClientDto),
   asyncWrapper(updateClientController)
 );
@@ -783,7 +783,7 @@ router.delete(
   "/:id",
   authMiddleware,
   //@ts-ignore
-  checkPermissions([Permission.SAV]),
+  checkPermissions([Permission.SAV, Permission.CONFIRMATEUR]),
   asyncWrapper(deleteClientController)
 );
 
