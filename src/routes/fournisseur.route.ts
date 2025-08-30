@@ -14,6 +14,7 @@ import {
 } from "../dto/fournisseur.dto";
 import { asyncWrapper } from "../utils/asyncWrapper";
 import { validateDtoClient } from "../middlewares/validateDtoClient";
+import { checkPermissions, Permission } from "../middlewares/permissions";
 
 const router = Router();
 
@@ -223,7 +224,7 @@ router.patch(
 router.get(
   "/",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.AGENT_DE_STOCK]),
   asyncWrapper(getAllFournisseurController)
 );
 
@@ -289,7 +290,7 @@ router.get(
 router.get(
   "/:id",
   authMiddleware,
-  requireAdmin,
+  checkPermissions([Permission.AGENT_DE_STOCK]),
   asyncWrapper(getFournisseurByIdController)
 );
 
