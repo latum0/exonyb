@@ -1,11 +1,20 @@
 import { Prisma } from "@prisma/client";
-import { CreateCommandeDto, GetCommandesQueryDto, UpdateCommandeDto } from "../dto/commande.dto";
+import {
+  CreateCommandeDto,
+  GetCommandesQueryDto,
+  UpdateCommandeDto,
+} from "../dto/commande.dto";
 import { ensureExists, prixUnitaire, stripNullish } from "../utils/helpers";
 import prisma from "../prisma";
 import { CommandeResponseDto } from "../dto/response.dto";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { createHistoriqueService } from "./historique.service";
-import { addLigne, calcMontantT, removeLigne, updateLigneQuantity } from "./ligneCommande.service";
+import {
+  addLigne,
+  calcMontantT,
+  removeLigne,
+  updateLigneQuantity,
+} from "./ligneCommande.service";
 import { createStockNotificationsIfNeeded } from "./notification.service";
 
 export async function createCommande(
@@ -19,25 +28,36 @@ export async function createCommande(
     if (existing) existing.quantite += l.quantite;
     else mergedLinesMap.set(l.produitId, { quantite: l.quantite });
   }
-  const mergedLines = Array.from(mergedLinesMap.entries()).map(([produitId, v]) => ({
-    produitId,
-    quantite: v.quantite
-  }));
+  const mergedLines = Array.from(mergedLinesMap.entries()).map(
+    ([produitId, v]) => ({
+      produitId,
+      quantite: v.quantite,
+    })
+  );
 
-  const produitIds = mergedLines.map(l => l.produitId);
+  const produitIds = mergedLines.map((l) => l.produitId);
   const uniqueProduitIds = Array.from(new Set(produitIds));
 
   const createdCommande = await prisma.$transaction(async (tx) => {
-    await ensureExists(() => tx.client.findUnique({ where: { idClient: dto.clientId } }), "Client");
+    await ensureExists(
+      () => tx.client.findUnique({ where: { idClient: dto.clientId } }),
+      "Client"
+    );
 
     const produits = await tx.produit.findMany({
       where: { idProduit: { in: uniqueProduitIds } },
-      select: { idProduit: true, prix: true, remise: true, stock: true, nom: true }
+      select: {
+        idProduit: true,
+        prix: true,
+        remise: true,
+        stock: true,
+        nom: true,
+      },
     });
-    const produitMap = new Map(produits.map(p => [p.idProduit, p]));
+    const produitMap = new Map(produits.map((p) => [p.idProduit, p]));
 
     let total = new Prisma.Decimal(0);
-    const linesPrepared = mergedLines.map(l => {
+    const linesPrepared = mergedLines.map((l) => {
       const prod = produitMap.get(l.produitId);
       if (!prod) throw new NotFoundError(`Produit not found: ${l.produitId}`);
 
@@ -51,18 +71,20 @@ export async function createCommande(
       return {
         produitId: l.produitId,
         quantite: l.quantite,
-        prixUnitaireDecimal: prixAfterRemise
+        prixUnitaireDecimal: prixAfterRemise,
       };
     });
 
     for (const lp of linesPrepared) {
       const r = await tx.produit.updateMany({
         where: { idProduit: lp.produitId, stock: { gte: lp.quantite } },
-        data: { stock: { decrement: lp.quantite } }
+        data: { stock: { decrement: lp.quantite } },
       });
       if (r.count === 0) {
         const prod = produitMap.get(lp.produitId);
-        throw new BadRequestError(`Stock insuffisant pour le produit ${prod?.nom ?? lp.produitId}`);
+        throw new BadRequestError(
+          `Stock insuffisant pour le produit ${prod?.nom ?? lp.produitId}`
+        );
       }
     }
 
@@ -74,16 +96,16 @@ export async function createCommande(
         montantTotal: total.toString(),
         clientId: dto.clientId,
         lignesCommande: {
-          create: linesPrepared.map(lp => ({
+          create: linesPrepared.map((lp) => ({
             produit: { connect: { idProduit: lp.produitId } },
             quantite: lp.quantite,
-            prixUnitaire: lp.prixUnitaireDecimal.toString()
-          }))
-        }
+            prixUnitaire: lp.prixUnitaireDecimal.toString(),
+          })),
+        },
       },
       include: {
-        lignesCommande: true
-      }
+        lignesCommande: true,
+      },
     });
 
     await createHistoriqueService(
@@ -95,7 +117,7 @@ export async function createCommande(
     try {
       await createStockNotificationsIfNeeded(tx, uniqueProduitIds, {
         trigger: `commande:${created.idCommande}`,
-        utilisateurId
+        utilisateurId,
       });
     } catch (err) {
       console.error("Failed to create stock notifications", err);
@@ -117,24 +139,28 @@ export async function createCommande(
       idLigne: l.idLigne,
       produitId: l.produitId,
       quantite: l.quantite,
-      prixUnitaire: (l.prixUnitaire as any)?.toString ? (l.prixUnitaire as any).toString() : String(l.prixUnitaire),
-    }))
+      prixUnitaire: (l.prixUnitaire as any)?.toString
+        ? (l.prixUnitaire as any).toString()
+        : String(l.prixUnitaire),
+    })),
   };
 
   return { statusCode: 201, data: responseDto };
 }
-
-
-
-
 
 export async function updateCommandeMontantT(
   idCommande: string,
   montantT: string | Prisma.Decimal,
   utilisateurId?: number
 ): Promise<ServiceResponse<CommandeResponseDto>> {
-
-  await ensureExists(() => prisma.commande.findUnique({ where: { idCommande }, select: { idCommande: true } }), "Commande");
+  await ensureExists(
+    () =>
+      prisma.commande.findUnique({
+        where: { idCommande },
+        select: { idCommande: true },
+      }),
+    "Commande"
+  );
 
   if (montantT === null || montantT === undefined) {
     throw new BadRequestError("Montant total est invalide");
@@ -152,10 +178,16 @@ export async function updateCommandeMontantT(
     const prev = await tx.commande.findUnique({ where: { idCommande } });
     const u = await tx.commande.update({
       where: { idCommande },
-      data: { montantTotal: dec }
+      data: { montantTotal: dec },
     });
     if (utilisateurId) {
-      await createHistoriqueService(tx, utilisateurId, `Montant total modifié pour la commande ${idCommande} (ancien: ${prev?.montantTotal?.toString() ?? 'N/A'} -> nouveau: ${dec.toFixed(2)})`);
+      await createHistoriqueService(
+        tx,
+        utilisateurId,
+        `Montant total modifié pour la commande ${idCommande} (ancien: ${
+          prev?.montantTotal?.toString() ?? "N/A"
+        } -> nouveau: ${dec.toFixed(2)})`
+      );
     }
     return u;
   });
@@ -166,42 +198,69 @@ export async function updateCommandeMontantT(
     statut: updated.statut,
     montantTotal: updated.montantTotal.toString(),
     idCommande: updated.idCommande,
-    clientId: updated.clientId
+    clientId: updated.clientId,
   };
   return { statusCode: 200, data: responseDto };
 }
-
-
 
 export async function updateCommande(
   idCommande: string,
   dto: UpdateCommandeDto,
   utilisateurId?: number
 ): Promise<ServiceResponse<CommandeResponseDto>> {
-
-  if (dto.lignes && !Array.isArray(dto.lignes)) throw new BadRequestError('lignes must be an array');
+  if (dto.lignes && !Array.isArray(dto.lignes))
+    throw new BadRequestError("lignes must be an array");
 
   const strp = stripNullish(dto);
   const { lignes, ...commandePatch } = strp as any;
 
   const updatedCmd = await prisma.$transaction(async (tx) => {
-    await ensureExists(() => tx.commande.findUnique({ where: { idCommande } }), 'Commande');
-
+    await ensureExists(
+      () => tx.commande.findUnique({ where: { idCommande } }),
+      "Commande"
+    );
 
     if (Array.isArray(lignes)) {
       for (const patch of lignes) {
-        if (patch.op === 'update') {
-          if (!patch.produitId || patch.quantite === undefined) { throw new BadRequestError("Le produitId ou la quantité doit exister.") };
-          await updateLigneQuantity(tx, patch.produitId, idCommande, patch.quantite, utilisateurId);
-          if (utilisateurId) await createHistoriqueService(tx, utilisateurId, `Quantité modifiée: produit ${patch.produitId} -> ${patch.quantite} (commande ${idCommande})`);
-        } else if (patch.op === 'add') {
-          if (!patch.produitId || patch.quantite === undefined) throw new BadRequestError("Le produitId ou la quantité doit exister.")
-          await addLigne(tx, idCommande, patch.produitId, patch.quantite, utilisateurId);
-        } else if (patch.op === 'remove') {
-          if (!patch.produitId) throw new BadRequestError("Le produitId ou la quantité doit exister.");
+        if (patch.op === "update") {
+          if (!patch.produitId || patch.quantite === undefined) {
+            throw new BadRequestError(
+              "Le produitId ou la quantité doit exister."
+            );
+          }
+          await updateLigneQuantity(
+            tx,
+            patch.produitId,
+            idCommande,
+            patch.quantite,
+            utilisateurId
+          );
+          if (utilisateurId)
+            await createHistoriqueService(
+              tx,
+              utilisateurId,
+              `Quantité modifiée: produit ${patch.produitId} -> ${patch.quantite} (commande ${idCommande})`
+            );
+        } else if (patch.op === "add") {
+          if (!patch.produitId || patch.quantite === undefined)
+            throw new BadRequestError(
+              "Le produitId ou la quantité doit exister."
+            );
+          await addLigne(
+            tx,
+            idCommande,
+            patch.produitId,
+            patch.quantite,
+            utilisateurId
+          );
+        } else if (patch.op === "remove") {
+          if (!patch.produitId)
+            throw new BadRequestError(
+              "Le produitId ou la quantité doit exister."
+            );
           await removeLigne(tx, idCommande, patch.produitId, utilisateurId);
         } else {
-          throw new BadRequestError('Opération invalide pour la ligne.');
+          throw new BadRequestError("Opération invalide pour la ligne.");
         }
       }
     }
@@ -209,14 +268,20 @@ export async function updateCommande(
     const totalDecimal = await calcMontantT(tx, idCommande);
     const totalStr = totalDecimal.toFixed(2);
     if (commandePatch.clientId) {
-      await ensureExists(() => prisma.client.findUnique({ where: { idClient: commandePatch.clientId } }), "Client")
+      await ensureExists(
+        () =>
+          prisma.client.findUnique({
+            where: { idClient: commandePatch.clientId },
+          }),
+        "Client"
+      );
     }
 
     const updated = await tx.commande.update({
       where: { idCommande },
-      data: { ...commandePatch, montantTotal: totalStr }, include: { lignesCommande: true }
+      data: { ...commandePatch, montantTotal: totalStr },
+      include: { lignesCommande: true },
     });
-
 
     return updated;
   });
@@ -233,33 +298,44 @@ export async function updateCommande(
       produitId: l.produitId,
       quantite: l.quantite,
       prixUnitaire: l.prixUnitaire != null ? String(l.prixUnitaire) : "0",
-      commandeId: l.commandeId
-    }))
+      commandeId: l.commandeId,
+    })),
   };
 
   return { statusCode: 200, data: responseDto };
 }
 
-
-
-export async function getCommandeById(idCommande: string): Promise<ServiceResponse<CommandeResponseDto>> {
-  const commande = await ensureExists(() => prisma.commande.findUnique(
-    {
-      where: { idCommande },
-      include: {
-        lignesCommande: {
-          select: {
-            idLigne: true,
-            produitId: true,
-            quantite: true,
-            prixUnitaire: true,
-            commandeId: true
-          }
-        }
-      }
-    }), "Commande")
-
-
+export async function getCommandeById(
+  idCommande: string
+): Promise<ServiceResponse<CommandeResponseDto>> {
+  const commande = await ensureExists(
+    () =>
+      prisma.commande.findUnique({
+        where: { idCommande },
+        include: {
+          client: {
+            select: {
+              numeroTelephone: true,
+            },
+          },
+          lignesCommande: {
+            select: {
+              produit: {
+                select: {
+                  nom: true,
+                },
+              },
+              idLigne: true,
+              produitId: true,
+              quantite: true,
+              prixUnitaire: true,
+              commandeId: true,
+            },
+          },
+        },
+      }),
+    "Commande"
+  );
 
   const dto: CommandeResponseDto = {
     idCommande: commande.idCommande,
@@ -268,19 +344,18 @@ export async function getCommandeById(idCommande: string): Promise<ServiceRespon
     adresseLivraison: commande.adresseLivraison,
     montantTotal: commande.montantTotal.toString(),
     clientId: commande.clientId,
+    client: commande.client.numeroTelephone,
     ligne: (commande.lignesCommande || []).map((l: any) => ({
       idLigne: l.idLigne,
       produitId: l.produitId,
+      produit: l.produit.nom,
       quantite: l.quantite,
       prixUnitaire: l.prixUnitaire != null ? String(l.prixUnitaire) : "0",
-      commandeId: l.commandeId
-    }))
-
+      commandeId: l.commandeId,
+    })),
   };
-  return { statusCode: 200, data: dto }
-
+  return { statusCode: 200, data: dto };
 }
-
 
 type PaginatedCommandes = {
   items: CommandeResponseDto[];
@@ -304,7 +379,10 @@ export async function getCommandes(
   if (q.statut) where.statut = q.statut;
 
   if (q.search) {
-    where.adresseLivraison = { contains: q.search, mode: "insensitive" as const };
+    where.adresseLivraison = {
+      contains: q.search,
+      mode: "insensitive" as const,
+    };
   }
 
   if (q.dateFrom || q.dateTo) {
@@ -324,7 +402,8 @@ export async function getCommandes(
   }
 
   const orderField = q.orderBy ?? "dateCommande";
-  const orderDir = (q.orderDir ?? "desc").toLowerCase() === "asc" ? "asc" : "desc";
+  const orderDir =
+    (q.orderDir ?? "desc").toLowerCase() === "asc" ? "asc" : "desc";
 
   const skip = (page - 1) * limit;
   const [total, rows] = await prisma.$transaction([
@@ -335,17 +414,27 @@ export async function getCommandes(
       skip,
       orderBy: { [orderField]: orderDir },
       include: {
+        client: {
+          select: {
+            numeroTelephone: true,
+          },
+        },
+        retour: {
+          select: {
+            idRetour: true,
+          },
+        },
         lignesCommande: {
           select: {
             idLigne: true,
             produitId: true,
             quantite: true,
             prixUnitaire: true,
-            commandeId: true
-          }
-        }
-      }
-    })
+            commandeId: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const items: CommandeResponseDto[] = rows.map((c) => ({
@@ -355,13 +444,15 @@ export async function getCommandes(
     adresseLivraison: c.adresseLivraison,
     montantTotal: c.montantTotal != null ? String(c.montantTotal) : "0",
     clientId: c.clientId,
+    client: c.client.numeroTelephone,
+    retour: c.retour?.idRetour,
     ligne: (c.lignesCommande || []).map((l) => ({
       idLigne: l.idLigne,
       produitId: l.produitId,
       quantite: l.quantite,
       prixUnitaire: l.prixUnitaire != null ? String(l.prixUnitaire) : "0",
-      commandeId: l.commandeId
-    }))
+      commandeId: l.commandeId,
+    })),
   }));
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -370,7 +461,7 @@ export async function getCommandes(
     total,
     page,
     limit,
-    totalPages
+    totalPages,
   };
 
   return { statusCode: 200, data: { items, meta } };
@@ -388,7 +479,7 @@ export async function deleteCommande(
   await prisma.$transaction(async (tx) => {
     const lines = await tx.ligneCommande.findMany({
       where: { commandeId: idCommande },
-      select: { quantite: true, produitId: true }
+      select: { quantite: true, produitId: true },
     });
 
     const totalsByProduit = lines.reduce<Record<string, number>>((acc, l) => {
@@ -398,11 +489,12 @@ export async function deleteCommande(
 
     await tx.commande.deleteMany({ where: { idCommande } });
 
-    const updates: Promise<any>[] = Object.entries(totalsByProduit).map(([produitId, qty]) =>
-      tx.produit.update({
-        where: { idProduit: produitId },
-        data: { stock: { increment: qty } }
-      })
+    const updates: Promise<any>[] = Object.entries(totalsByProduit).map(
+      ([produitId, qty]) =>
+        tx.produit.update({
+          where: { idProduit: produitId },
+          data: { stock: { increment: qty } },
+        })
     );
     await Promise.all(updates);
 
@@ -416,10 +508,17 @@ export async function deleteCommande(
   return { statusCode: 200, message: "Commande supprimée" };
 }
 
-
-
-export async function updateCommandeStatut(tx: Prisma.TransactionClient, idClient: number, statut: string): Promise<void> {
-  await ensureExists(() => tx.client.findUnique({ where: { idClient } }), "Client")
-  await prisma.commande.updateMany({ where: { clientId: idClient }, data: { statut } })
-
+export async function updateCommandeStatut(
+  tx: Prisma.TransactionClient,
+  idClient: number,
+  statut: string
+): Promise<void> {
+  await ensureExists(
+    () => tx.client.findUnique({ where: { idClient } }),
+    "Client"
+  );
+  await prisma.commande.updateMany({
+    where: { clientId: idClient },
+    data: { statut },
+  });
 }
