@@ -152,6 +152,10 @@ export const handleChangePassword = async (
     }
     const userId = Number(req.user.sub);
     const result = await changePassword(userId, dto);
+    if (result.statusCode && result.statusCode !== 200) {
+      return res.status(result.statusCode).json(result);
+    }
+
     res.status(200).json(result);
   } catch (err) {
     next(err);
@@ -189,16 +193,25 @@ export const logoutController = async (req: Request, res: Response) => {
   }
 };
 
-export async function updateProfileController(req: Request, res: Response): Promise<void> {
-
+export async function updateProfileController(
+  req: Request,
+  res: Response
+): Promise<void> {
   const userId = (req as any).user?.sub ?? (req as any).userId;
   if (!userId) {
     res.status(401).json({ message: "Unauthorized" });
   }
 
   const dto = req.body as UpdateProfileDto;
-  const serviceResp: ServiceResponse<any> = await updateUserProfile(userId, dto);
+  const serviceResp: ServiceResponse<any> = await updateUserProfile(
+    userId,
+    dto
+  );
 
-  res.status(serviceResp.statusCode).json({ data: serviceResp.data, message: serviceResp.message ?? "Updated" });
-
+  res
+    .status(serviceResp.statusCode)
+    .json({
+      data: serviceResp.data,
+      message: serviceResp.message ?? "Updated",
+    });
 }
