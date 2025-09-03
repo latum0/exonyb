@@ -60,3 +60,26 @@ export class UserResponseDto {
 }
 
 
+
+export class AccountingResponseDto {
+    id!: number;
+    achatProduits!: string;
+    ads!: string;
+    emballage!: string;
+    salaires!: string;
+    abonnementTel!: string;
+    autre!: string;
+    commentaire?: string | null;
+    total!: string;
+    createdAt?: string
+}
+
+export class AccountingListResponseDto {
+    accountings!: AccountingResponseDto[];
+    total!: number;
+    page!: number;
+    limit!: number;
+    totalPages!: number;
+}
+
+

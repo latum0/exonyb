@@ -49,6 +49,7 @@ export async function createClient(
 }
 export async function getAllClients(filter: ClientFilterDto = {}) {
   const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
+  const page = Math.max(1, Math.floor(filter.page ?? 1));
 
   const baseWhere: any = {};
 
@@ -64,12 +65,13 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
   }
 
   if (filter.search) {
+    const s = String(filter.search);
     baseWhere.OR = [
-      { nom: { contains: filter.search } },
-      { prenom: { contains: filter.search } },
-      { adresse: { contains: filter.search } },
-      { email: { contains: filter.search } },
-      { numeroTelephone: { contains: filter.search } },
+      { nom: { contains: s, mode: "insensitive" } },
+      { prenom: { contains: s, mode: "insensitive" } },
+      { adresse: { contains: s, mode: "insensitive" } },
+      { email: { contains: s, mode: "insensitive" } },
+      { numeroTelephone: { contains: s } },
     ];
   }
 
@@ -82,43 +84,39 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
     statut: statutCondition,
   };
 
-  const cursorNom = filter.cursorNom || null;
-  const cursorId = filter.cursorId ? Number(filter.cursorId) : null;
 
-  const keysetWhere = { ...where };
-  if (cursorNom !== null && cursorId !== null) {
-    keysetWhere.OR = [
-      { nom: { gt: cursorNom } },
-      { AND: [{ nom: { equals: cursorNom } }, { idClient: { gt: cursorId } }] },
-    ];
-  }
+
+  const skip = (page - 1) * perPage;
 
   try {
-    const clients = await prisma.client.findMany({
-      where: keysetWhere,
-      take: perPage,
-      orderBy: [{ nom: "asc" }, { idClient: "asc" }],
-      include: {
-        commentaires: {
-          take: 5,
-          orderBy: { dateCreated: "desc" },
+    const [count, client] = await Promise.all([
+      prisma.client.count({ where }),
+      prisma.client.findMany({
+        where,
+        take: perPage,
+        skip,
+        orderBy: [{ nom: "asc" }, { idClient: "asc" }],
+        include: {
+          commentaires: {
+            take: 5,
+            orderBy: { dateCreated: "desc" },
+          },
         },
-      },
-    });
+      })
+    ])
 
-    let nextCursor = null;
-    if (clients.length > 0) {
-      const last = clients[clients.length - 1];
-      nextCursor = { cursorNom: last.nom, cursorId: last.idClient };
-    }
+
+    const nextPage = client.length === perPage ? page + 1 : null;
 
     return {
       statusCode: 200,
       data: {
-        data: clients,
+        data: client,
         meta: {
           perPage,
-          nextCursor,
+          page,
+          nextPage,
+          total: count,
         },
       },
     };

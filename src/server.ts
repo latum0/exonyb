@@ -14,6 +14,8 @@ import retoursRoutes from "./routes/retour.route";
 import historiquesRoutes from "./routes/historique.route";
 import commandesRoutes from "./routes/commande.route";
 import ligneRoutes from "./routes/ligneCommande.route";
+import accountingRoutes from "./routes/accounting.route";
+
 import notifRoutes from "./routes/notification.route";
 import { scheduleHistoriqueCleanup } from "./jobs/historiqueCleanup";
 import produitsRoutes from "./routes/produit.route";
@@ -41,6 +43,7 @@ app.use("/lignes", ligneRoutes);
 app.use("/notifications", notifRoutes);
 app.use("/produits", produitsRoutes);
 app.use("/statistiques", statistiquesRoutes);
+app.use("/accountings", accountingRoutes)
 
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));

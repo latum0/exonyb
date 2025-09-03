@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getAllHistoriques, getHistoriqueById, deleteHistoriqueById, deleteOldHistoriques } from "../services/historique.service";
+import { getAllHistoriques, getHistoriqueById, deleteHistoriqueById, deleteOldHistoriques, deleteAllHistorique } from "../services/historique.service";
 
 export async function getAllHistoriquesController(
     req: Request,
@@ -51,7 +51,7 @@ export async function deleteOldHistoriquesController(
     next: NextFunction
 ): Promise<void> {
 
-    const result = await deleteOldHistoriques();
-    res.status(200).json({ deleted: result.count });
+    const { statusCode, message } = await deleteAllHistorique();
+    res.status(statusCode).json({ message });
 
 } 

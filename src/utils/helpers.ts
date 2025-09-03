@@ -1,6 +1,7 @@
 
 import { Prisma } from "@prisma/client";
 import { BadRequestError, ConflictError, NotFoundError } from "./errors";
+import { CreateAccountingDto } from "../dto/accounting.dto";
 
 //used to check the existing of a value, otherwise return an error
 export async function ensureExists<T>(find: () => Promise<T | null>, entity: string): Promise<T> {
@@ -81,3 +82,29 @@ export function prixUnitaire(remise: number | undefined, prix: number | string |
     return new Prisma.Decimal(prixAfterRemise.toFixed(2));
 }
 
+
+export function dateHelper(where: any, dateFrom?: any, dateTo?: any, dateField = 'dateCommande') {
+    if (dateFrom || dateTo) {
+        where[dateField] = {};
+        if (dateFrom) where[dateField].gte = new Date(dateFrom);
+        if (dateTo) where[dateField].lte = new Date(dateTo);
+    }
+    return where;
+}
+
+export function stringToDecimalAccounting(dto: any) {
+    const achatProduits = new Prisma.Decimal(dto.achatProduits);
+    const ads = new Prisma.Decimal(dto.ads);
+    const emballage = new Prisma.Decimal(dto.emballage);
+    const abonnementTel = new Prisma.Decimal(dto.abonnementTel);
+    const autre = new Prisma.Decimal(dto.autre);
+    const salaires = new Prisma.Decimal(dto.salaires);
+
+    return { achatProduits, ads, emballage, abonnementTel, autre, salaires }
+}
+
+
+export function stringToDecimal(v: any) {
+    const decimal = v ?? new Prisma.Decimal(v)
+    return decimal
+}

@@ -135,11 +135,7 @@ export async function deleteHistoriqueById(
   );
 
   await prisma.$transaction(async (tx) => {
-    await createHistoriqueService(
-      tx,
-      utilisateurId,
-      `Historique ${id} supprimé`
-    );
+
     await tx.historique.delete({
       where: { idHistorique: id },
     });
@@ -149,4 +145,10 @@ export async function deleteHistoriqueById(
     statusCode: 200,
     message: "Historique supprimé avec succès.",
   };
+}
+
+
+export async function deleteAllHistorique(): Promise<ServiceResponse<void>> {
+  await prisma.historique.deleteMany();
+  return { statusCode: 200, message: "historique supprimé" }
 }

@@ -165,3 +165,19 @@ model Notification {
   @@unique([produitId, type])
   @@index([produitId, resolved])
 }
+
+model Accounting {
+  id            Int      @id @default(autoincrement())
+  achatProduits Decimal  @db.Decimal(8, 2)
+  ads           Decimal  @db.Decimal(8, 2)
+  emballage     Decimal  @db.Decimal(8, 2)
+  salaires      Decimal  @db.Decimal(8, 2)
+  abonnementTel Decimal  @db.Decimal(8, 2)
+  autre         Decimal  @db.Decimal(8, 2)
+  commentaire   String?
+  createdAt     DateTime @default(now())
+  total         Decimal  @db.Decimal(8, 2)
+
+  @@index([createdAt])
+  @@index([total])
+}

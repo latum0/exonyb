@@ -33,7 +33,7 @@ export async function createRetour(
           commande: { connect: { idCommande: data.commandeId } },
         },
       });
-      tx.commande.update({ where: { idCommande: data.commandeId }, data: { statut: "RETORNÉE" } })
+      await tx.commande.update({ where: { idCommande: data.commandeId }, data: { statut: "RETORNÉE" } })
 
       await createHistoriqueService(
         tx,

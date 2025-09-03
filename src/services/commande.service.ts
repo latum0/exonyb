@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { CreateCommandeDto, GetCommandesQueryDto, UpdateCommandeDto } from "../dto/commande.dto";
 import { ensureExists, prixUnitaire, stripNullish } from "../utils/helpers";
 import prisma from "../prisma";
-import { CommandeResponseDto } from "../dto/response.dto";
+import { CommandeListResponseDto, CommandeResponseDto } from "../dto/response.dto";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { createHistoriqueService } from "./historique.service";
 import { addLigne, calcMontantT, removeLigne, updateLigneQuantity } from "./ligneCommande.service";
@@ -282,19 +282,9 @@ export async function getCommandeById(idCommande: string): Promise<ServiceRespon
 }
 
 
-type PaginatedCommandes = {
-  items: CommandeResponseDto[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-};
-
 export async function getCommandes(
   q: GetCommandesQueryDto = {}
-): Promise<ServiceResponse<PaginatedCommandes>> {
+): Promise<ServiceResponse<CommandeListResponseDto>> {
   const page = Math.max(1, Math.floor(q.page ?? 1));
   const limit = Math.min(100, Math.max(1, Math.floor(q.limit ?? 10)));
 
@@ -348,32 +338,25 @@ export async function getCommandes(
     })
   ]);
 
-  const items: CommandeResponseDto[] = rows.map((c) => ({
+  const commandes: CommandeResponseDto[] = rows.map((c) => ({
     idCommande: c.idCommande,
     dateCommande: c.dateCommande,
     statut: c.statut,
     adresseLivraison: c.adresseLivraison,
-    montantTotal: c.montantTotal != null ? String(c.montantTotal) : "0",
+    montantTotal: c.montantTotal != null ? c.montantTotal.toString() : "0",
     clientId: c.clientId,
     ligne: (c.lignesCommande || []).map((l) => ({
       idLigne: l.idLigne,
       produitId: l.produitId,
       quantite: l.quantite,
-      prixUnitaire: l.prixUnitaire != null ? String(l.prixUnitaire) : "0",
+      prixUnitaire: l.prixUnitaire != null ? l.prixUnitaire.toString() : "0",
       commandeId: l.commandeId
     }))
   }));
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  const meta = {
-    total,
-    page,
-    limit,
-    totalPages
-  };
-
-  return { statusCode: 200, data: { items, meta } };
+  return { statusCode: 200, data: { commandes, total, page, limit, totalPages } };
 }
 
 export async function deleteCommande(

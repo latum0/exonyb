@@ -1,15 +1,9 @@
 import { StatistiquesClientDto, StatistiquesCommandeDto, StatistiquesRetourDto } from "../dto/statistiques.dto";
 import prisma from "../prisma";
+import { dateHelper } from "../utils/helpers";
 
 
-export function dateHelper(where: any, dateFrom?: any, dateTo?: any, dateField = 'dateCommande') {
-  if (dateFrom || dateTo) {
-    where[dateField] = {};
-    if (dateFrom) where[dateField].gte = new Date(dateFrom);
-    if (dateTo) where[dateField].lte = new Date(dateTo);
-  }
-  return where;
-}
+
 
 function toDateOrUndefined(v?: string): Date | undefined {
   if (!v) return undefined;
