@@ -37,7 +37,7 @@ export async function createStockNotificationsIfNeeded(
         .filter((p) => p.stock === 0 && !alreadyAlerted.has(p.idProduit))
         .map((p) => {
             const trigger = ctx?.trigger ? ` (trigger: ${ctx?.trigger})` : "";
-            const message = `Produit "${p.nom ?? p.idProduit}" est en rupture de stock.${trigger}`;
+            const message = `Produit "${p.nom ?? p.idProduit}" est en rupture de stock.`;
             return {
                 produitId: p.idProduit,
                 type: "OUT_OF_STOCK",
