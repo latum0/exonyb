@@ -182,7 +182,46 @@ route.post("/", authMiddleware, requireAdmin, validateDtoClient(CreateAccounting
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 route.get("/", authMiddleware, requireAdmin, asyncWrapper(getAllAccoutingController))
-route.get("/report", authMiddleware, requireAdmin, validateDtoClient(IntervalDateDto), asyncWrapper(getAccountingsBydatePuppeteerController))
+
+/**
+ * @openapi
+ * /accountings/report:
+ *   post:
+ *     summary: Generate and download accounting PDF report for a date range
+ *     description: Generate a PDF with accounting totals for an interval. If no dates are provided, totals for all time are returned.
+ *     tags:
+ *       - Accounting
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/IntervalDateDto'
+ *           example:
+ *             dateFrom: "2025-01-01"
+ *             dateTo: "2025-01-31"
+ *     responses:
+ *       '200':
+ *         description: PDF report (file download)
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       '400':
+ *         description: Bad request - e.g. no accounting data for the range
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       '401':
+ *         $ref: '#/components/responses/Unauthorized'
+ *       '403':
+ *         $ref: '#/components/responses/Forbidden'
+ */
+route.post("/report", authMiddleware, requireAdmin, validateDtoClient(IntervalDateDto), asyncWrapper(getAccountingsBydatePuppeteerController))
 
 /**
  * @swagger

@@ -139,7 +139,6 @@ export function payloadAccounting(
 
 
 export function htmlPdf(dateFrom: string, dateTo: string, achatProduitsTotal: string, adsTotal: string, emballageTotal: string, abonnementTelTotal: string, salairesTotal: string, autreTotal: string, totalDate: string) {
-    console.log(achatProduitsTotal)
 
     const html = `<!doctype html>
 <html lang="fr">
@@ -372,7 +371,6 @@ export function htmlPdf(dateFrom: string, dateTo: string, achatProduitsTotal: st
     <div class="card">
       <div class="header">
         <!-- Option: replace src with your base64 data URI or external URL -->
-        <img class="logo-img" src="data:image/png;base64,{{LOGO_BASE64}}" alt="Logo Exony" />
 
         <div class="brand">
           <div class="name">Exony</div>
@@ -443,7 +441,6 @@ export function htmlPdf(dateFrom: string, dateTo: string, achatProduitsTotal: st
       </table>
 
       <div class="footer">
-        <div class="note">Préparé par Exony · <span class="note">Confidentiel</span></div>
         <div class="note">Imprimé le ${new Date().toLocaleDateString('fr-FR')}</div>
       </div>
 

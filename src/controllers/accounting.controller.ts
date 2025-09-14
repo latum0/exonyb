@@ -50,6 +50,7 @@ export async function getAccountingsBydatePuppeteerController(
   res: Response,
   next: NextFunction
 ) {
+  console.log("controller")
   let browser: puppeteer.Browser | null = null;
 
   const dateDto = req.body;

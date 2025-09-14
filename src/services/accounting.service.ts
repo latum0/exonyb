@@ -237,14 +237,39 @@ export async function getAccountingsByDate(
         totalDate: "0.00",
     };
 
+    // Helper: convert incoming date-string to Date (start / end of day)
+    const toStartOfDay = (d?: string): Date | undefined => {
+        if (!d) return undefined;
+        if (d.includes("T")) return new Date(d);
+        return new Date(`${d}T00:00:00.000Z`);
+    };
+    const toEndOfDay = (d?: string): Date | undefined => {
+        if (!d) return undefined;
+        if (d.includes("T")) return new Date(d);
+        return new Date(`${d}T23:59:59.999Z`);
+    };
+
+    const fmt = (v: any): string => {
+        if (v === null || v === undefined) return "0.00";
+        try {
+            if (typeof v === "object" && typeof v.toFixed === "function") {
+                return (v as any).toFixed(2);
+            }
+            const n = Number(v);
+            if (Number.isNaN(n)) return String(v);
+            return n.toFixed(2);
+        } catch {
+            return String(v);
+        }
+    };
+
     if (date?.dateFrom || date?.dateTo) {
         where.createdAt = {};
-        if (date.dateFrom) {
-            where.createdAt.gte = date.dateFrom;
-        }
-        if (date.dateTo) {
-            where.createdAt.lte = date.dateTo;
-        }
+        const from = toStartOfDay(date?.dateFrom);
+        const to = toEndOfDay(date?.dateTo);
+
+        if (from) where.createdAt.gte = from;
+        if (to) where.createdAt.lte = to;
     }
 
     const accountings = await prisma.accounting.aggregate({
@@ -260,13 +285,13 @@ export async function getAccountingsByDate(
         },
     });
 
-    payload.achatProduitsTotal = accountings._sum.achatProduits?.toString() ?? "0.00";
-    payload.adsTotal = accountings._sum.ads?.toString() ?? "0.00";
-    payload.emballageTotal = accountings._sum.emballage?.toString() ?? "0.00";
-    payload.abonnementTelTotal = accountings._sum.abonnementTel?.toString() ?? "0.00";
-    payload.autreTotal = accountings._sum.autre?.toString() ?? "0.00";
-    payload.salairesTotal = accountings._sum.salaires?.toString() ?? "0.00";
-    payload.totalDate = accountings._sum.total?.toString() ?? "0.00";
+    payload.achatProduitsTotal = fmt(accountings._sum.achatProduits);
+    payload.adsTotal = fmt(accountings._sum.ads);
+    payload.emballageTotal = fmt(accountings._sum.emballage);
+    payload.abonnementTelTotal = fmt(accountings._sum.abonnementTel);
+    payload.autreTotal = fmt(accountings._sum.autre);
+    payload.salairesTotal = fmt(accountings._sum.salaires);
+    payload.totalDate = fmt(accountings._sum.total);
 
     return {
         statusCode: 200,
@@ -275,8 +300,5 @@ export async function getAccountingsByDate(
             dateFrom: date.dateFrom ? String(date.dateFrom) : "",
             dateTo: date?.dateTo ? String(date.dateTo) : "",
         },
-
     };
 }
-
-
