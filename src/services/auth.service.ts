@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Users } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcrypt";
 import {
   generateEmailVerificationToken,
@@ -8,7 +8,7 @@ import {
 import jwt from "jsonwebtoken";
 import { sendVerificationEmail } from "../utils/email";
 import { ChangePasswordDto, UpdateProfileDto } from "../dto/auth.dto";
-import { ensureExists, ensureUnique, stripNullish } from "../utils/helpers";
+import { ensureExists, stripNullish } from "../utils/helpers";
 import { ConflictError } from "../utils/errors";
 import { UserResponseDto } from "../dto/response.dto";
 import { createHistoriqueService } from "./historique.service";

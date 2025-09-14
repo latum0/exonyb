@@ -1,3 +1,4 @@
+// src/swagger.ts
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { Express } from "express";
@@ -8,7 +9,174 @@ const options = {
     info: {
       title: "Exony Admin API",
       version: "1.0.0",
+      description: "Admin API for Exony - accounting, orders, notifications, users, etc."
     },
+
+    // --- Paths: documented endpoints (POST create + PATCH update) ---
+    paths: {
+      "/accountings": {
+        post: {
+          summary: "Create an accounting entry",
+          tags: ["Accounting"],
+          operationId: "createAccounting",
+          security: [{ bearerAuth: [] }],
+          description:
+            "Create a new accounting row. Requires admin privileges. Numeric fields are decimal strings (0-2 fraction digits).",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateAccountingDto" },
+                examples: {
+                  simple: {
+                    value: {
+                      achatProduits: "1200.50",
+                      ads: "300.00",
+                      emballage: "150.75",
+                      salaires: "2500.00",
+                      abonnementTel: "80.00",
+                      autre: "50.00",
+                      commentaire: "Monthly accounting report",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Created - returns the created accounting",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/AccountingResponseDto" },
+                  examples: {
+                    created: {
+                      value: {
+                        id: 3,
+                        achatProduits: "1200.50",
+                        ads: "300.00",
+                        emballage: "150.75",
+                        abonnementTel: "80.00",
+                        autre: "50.00",
+                        salaires: "2500.00",
+                        commentaire: "Monthly accounting report",
+                        total: "4281.25",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "400": {
+              description: "Validation error / Bad Request",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "401": {
+              description: "Unauthorized (missing/invalid token)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "403": {
+              description: "Forbidden (not admin)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+          },
+        },
+      },
+
+      "/accountings/{id}": {
+        patch: {
+          summary: "Update an accounting entry (partial)",
+          tags: ["Accounting"],
+          operationId: "updateAccounting",
+          security: [{ bearerAuth: [] }],
+          description:
+            "Partially update an accounting row. Fields are optional; only provided fields will be updated. Requires admin privileges.",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer", example: 1 },
+              description: "Numeric id of the accounting row to update",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateAccountingDto" },
+                examples: {
+                  partial: {
+                    value: {
+                      achatProduits: "1300.00",
+                      commentaire: "Adjusted purchase cost",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "OK - updated accounting row",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/AccountingResponseDto" },
+                  examples: {
+                    updated: {
+                      value: {
+                        id: 1,
+                        achatProduits: "1300.00",
+                        ads: "300.00",
+                        emballage: "150.75",
+                        abonnementTel: "80.00",
+                        autre: "50.00",
+                        salaires: "2500.00",
+                        commentaire: "Adjusted purchase cost",
+                        total: "4381.25",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "400": {
+              description: "Bad Request (invalid id or payload)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "401": {
+              description: "Unauthorized",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "403": {
+              description: "Forbidden (not admin)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "404": {
+              description: "Not Found (accounting row doesn't exist)",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } },
+            },
+            "422": {
+              description: "Validation error (class-validator) - detailed",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      error: { type: "string", example: "ValidationError" },
+                      message: { type: "string", example: "Validation failed" },
+                      details: { type: "array", example: [{ property: "ads", constraints: { matches: "price must be a number" } }] },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    // --- Components: security + schemas (existing + new) ---
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -17,7 +185,9 @@ const options = {
           bearerFormat: "JWT",
         },
       },
+
       schemas: {
+        // --- previously provided schemas and many others (kept as-is) ---
         ForgotPasswordDto: {
           type: "object",
           properties: {
@@ -218,6 +388,7 @@ const options = {
           additionalProperties: false
         },
 
+        // --- User / Error schemas ---
         User: {
           type: "object",
           properties: {
@@ -241,10 +412,128 @@ const options = {
             message: { type: "string", example: "Message explicatif de l'erreur" },
           },
         },
+
+        // ----------------- Accounting-specific schemas (previous + new) -----------------
+        CreateAccountingDto: {
+          type: "object",
+          properties: {
+            achatProduits: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "1200.50",
+              description: "Decimal string with up to 2 fraction digits"
+            },
+            ads: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "300.00"
+            },
+            emballage: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "150.75"
+            },
+            salaires: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "2500.00"
+            },
+            abonnementTel: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "80.00"
+            },
+            autre: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "50.00"
+            },
+            commentaire: {
+              type: "string",
+              nullable: true,
+              example: "Monthly accounting report"
+            }
+          },
+          required: [
+            "achatProduits",
+            "ads",
+            "emballage",
+            "salaires",
+            "abonnementTel",
+            "autre"
+          ],
+          additionalProperties: false
+        },
+
+        AccountingResponseDto: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 1 },
+            achatProduits: { type: "string", example: "1200.50" },
+            ads: { type: "string", example: "300.00" },
+            emballage: { type: "string", example: "150.75" },
+            abonnementTel: { type: "string", example: "80.00" },
+            autre: { type: "string", example: "50.00" },
+            salaires: { type: "string", example: "2500.00" },
+            commentaire: { type: "string", nullable: true, example: "Monthly accounting report" },
+            total: { type: "string", example: "4281.25" }
+          },
+          required: ["id", "achatProduits", "ads", "emballage", "abonnementTel", "autre", "salaires", "total"],
+          additionalProperties: false
+        },
+
+        UpdateAccountingDto: {
+          type: "object",
+          properties: {
+            achatProduits: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "1300.00",
+              description: "Optional decimal string (up to 2 decimals)"
+            },
+            ads: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "300.00"
+            },
+            emballage: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "150.75"
+            },
+            salaires: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "2500.00"
+            },
+            abonnementTel: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "80.00"
+            },
+            autre: {
+              type: "string",
+              pattern: "^\\d+(\\.\\d{1,2})?$",
+              example: "50.00"
+            },
+            commentaire: {
+              type: "string",
+              nullable: true,
+              example: "Adjusted purchase cost"
+            }
+          },
+          additionalProperties: false,
+          description: "All fields optional — only provided fields will be updated."
+        },
+
+        // ------------------------------------------------------------------------
       },
     },
+
     security: [{ bearerAuth: [] }],
   },
+
+  // swagger-jsdoc will also scan these globs for JSDoc comments (if you prefer route-level JSDoc)
   apis: ["./src/routes/**/*.ts", "./src/dto/*.ts"],
 };
 

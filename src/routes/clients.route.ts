@@ -2,7 +2,6 @@ import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import { validateDtoClient } from "../middlewares/validateDtoClient";
 import { CreateClientDto, UpdateClientDto } from "../dto/client.dto";
-import { requireAdmin } from "../middlewares/requireAdmin";
 import {
   createClientController,
   getAllClientsController,

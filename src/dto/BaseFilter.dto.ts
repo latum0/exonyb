@@ -23,3 +23,13 @@ export class BaseFilterDto {
     @IsString()
     search?: string;
 }
+
+export class IntervalDateDto {
+    @IsOptional()
+    @IsDateString()
+    dateFrom?: string;
+
+    @IsOptional()
+    @IsDateString()
+    dateTo?: string;
+}

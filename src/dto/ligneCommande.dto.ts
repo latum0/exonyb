@@ -45,6 +45,11 @@ export enum LineOperation {
 }
 
 export class UpdateLinePatchDto {
+
+    @IsNotEmpty()
+    @IsEnum(LineOperation, { message: "op must be one of: add, update, delete" })
+    op!: LineOperation;
+
     @IsOptional()
     @Type(() => Number)
     @IsInt()
@@ -55,9 +60,6 @@ export class UpdateLinePatchDto {
     @IsUUID()
     produitId!: string;
 
-    @IsNotEmpty()
-    @IsEnum(LineOperation, { message: "op must be one of: add, update, delete" })
-    op!: LineOperation;
 }
 
 

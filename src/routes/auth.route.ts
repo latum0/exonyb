@@ -14,8 +14,6 @@ import {
 import { ForgotPasswordDto, LoginDto, UpdateProfileDto } from "../dto/auth.dto";
 import { validateDto } from "../middlewares/validateDto";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { swaggerRouteDoc } from "../utils/waggerHelpers";
-import { updateUserProfile } from "../services/auth.service";
 import { asyncWrapper } from "../utils/asyncWrapper";
 
 const router = Router();

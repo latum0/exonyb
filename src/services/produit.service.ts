@@ -6,7 +6,7 @@ import { Produit } from "@prisma/client";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { restockNotification } from "./notification.service";
+import { createStockNotificationsIfNeeded, restockNotification } from "./notification.service";
 export class HttpError extends Error {
   statusCode: number;
   constructor(message: string, statusCode = 400) {
@@ -51,6 +51,7 @@ export async function createProduitService(
   const produitId = crypto.randomUUID();
   const productUrl = `http://localhost:3000/produits/${produitId}`;
 
+
   const produit = await prisma.produit.create({
     data: {
       idProduit: produitId,
@@ -68,14 +69,18 @@ export async function createProduitService(
       },
     },
   });
-  await prisma.historique.create({
-    data: {
-      dateModification: new Date(),
-      descriptionAction: `Création du produit ${produit.nom}`,
 
-      utilisateurId,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    await prisma.historique.create({
+      data: {
+        dateModification: new Date(),
+        descriptionAction: `Création du produit ${produit.nom}`,
+
+        utilisateurId,
+      },
+    });
+    await createStockNotificationsIfNeeded(tx, [produit.idProduit]);
+  })
 
   return produit;
 }
@@ -293,6 +298,14 @@ export const updateProduit = async (
           await restockNotification(tx, [id]);
         } catch (err) {
           console.error("Failed to resolve restock notifications for produit", id, err);
+        }
+      }
+      if (prevStock > 0 && newStock === 0) {
+        try {
+          await createStockNotificationsIfNeeded(tx, [id]);
+        } catch (err) {
+          console.error("Failed to resolve restock notifications for produit", id, err);
+
         }
       }
     }

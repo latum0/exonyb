@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { requireAdmin } from "../middlewares/requireAdmin";
 import { CreateCommandeDto, UpdateCommandeDto } from "../dto/commande.dto";
 import { createCommandeController, deleteCommandeController, getAllCommandesController, getCommandeByIdController, updateCommandeController, updateCommandeMontantController } from "../controllers/commande.controller";
 import { asyncWrapper } from "../utils/asyncWrapper";
@@ -276,7 +275,7 @@ route.delete("/:id", authMiddleware, checkPermissions([Permission.CONFIRMATEUR])
  *       '409':
  *         description: 'Conflit (ex: stock insuffisant)'
  */
-route.patch("/:id", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]), validateDtoClient(UpdateCommandeDto), asyncWrapper(updateCommandeController))
+route.patch("/:id", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]), validateDtoClient(UpdateCommandeDto, "body"), asyncWrapper(updateCommandeController))
 
 /**
  * @swagger

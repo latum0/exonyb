@@ -7,7 +7,6 @@ import {
   getUserByIdService,
   updateUserPermissionsService,
 } from "../services/users.service";
-import jwt from "jsonwebtoken";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 

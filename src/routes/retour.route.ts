@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
-import { requireAdmin } from "../middlewares/requireAdmin";
 import { CreateRetourDto, UpdateRetourDto } from "../dto/retour.dto";
 import {
   createRetourController,

@@ -4,6 +4,7 @@ import { ensureExists } from "../utils/helpers";
 import prisma from "../prisma";
 import { NotificationQueryDto } from "../dto/notification.dto";
 import { createHistoriqueService } from "./historique.service";
+import { sendStockNotif } from "../utils/email";
 
 
 
@@ -38,6 +39,7 @@ export async function createStockNotificationsIfNeeded(
         .map((p) => {
             const trigger = ctx?.trigger ? ` (trigger: ${ctx?.trigger})` : "";
             const message = `Produit "${p.nom ?? p.idProduit}" est en rupture de stock.`;
+            sendStockNotif(p.idProduit, p.nom)
             return {
                 produitId: p.idProduit,
                 type: "OUT_OF_STOCK",

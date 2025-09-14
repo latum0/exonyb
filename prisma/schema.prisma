@@ -50,14 +50,14 @@ model Historique {
 }
 
 model Client {
-  idClient        Int          @id @default(autoincrement())
-  nom             String
-  prenom          String
-  adresse         String
-  email           String       @unique
-  numeroTelephone String       @unique
-  statut          ClientStatut @default(ACTIVE)
-  dateCreated     DateTime     @default(now())
+  idClient        Int           @id @default(autoincrement())
+  nom             String?
+  prenom          String?
+  adresse         String?
+  email           String?       @unique
+  numeroTelephone String        @unique
+  statut          ClientStatut? @default(ACTIVE)
+  dateCreated     DateTime      @default(now())
 
   commentaires Commentaire[]
   commandes    Commande[]

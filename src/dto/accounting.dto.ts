@@ -108,3 +108,14 @@ export class GetAccountingQueryDto extends BaseFilterDto {
     maxTotal?: number;
 
 }
+
+
+export class AccountingTotals {
+    achatProduitsTotal!: string | null;
+    adsTotal!: string | null;
+    emballageTotal!: string | null;
+    abonnementTelTotal!: string | null;
+    autreTotal!: string | null;
+    salairesTotal!: string | null;
+    totalDate!: string;
+}

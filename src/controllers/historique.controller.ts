@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getAllHistoriques, getHistoriqueById, deleteHistoriqueById, deleteOldHistoriques, deleteAllHistorique } from "../services/historique.service";
+import { getAllHistoriques, getHistoriqueById, deleteHistoriqueById, deleteAllHistorique } from "../services/historique.service";
 
 export async function getAllHistoriquesController(
     req: Request,

@@ -66,7 +66,7 @@ export class UpdateCommandeDto {
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => UpdateLigneCommandeDto)
+    @Type(() => UpdateLinePatchDto)
     lignes?: UpdateLinePatchDto[];
 }
 

@@ -13,11 +13,12 @@ import { CommentaireDto } from "./commentaire.dto";
 import { ClientStatut } from "@prisma/client";
 
 export class CreateClientDto {
-  @IsString() @IsNotEmpty() nom!: string;
-  @IsString() @IsNotEmpty() prenom!: string;
-  @IsString() @IsNotEmpty() adresse!: string;
-  @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email!: string;
-  @IsString() @IsNotEmpty()
+
+  @IsOptional() @IsString() nom?: string;
+  @IsOptional() @IsString() prenom?: string;
+  @IsOptional() @IsString() adresse?: string;
+  @IsOptional() @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email?: string;
+  @IsNotEmpty() @IsString()
   @Matches(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
     message: "Numéro de téléphone algérien invalide",
   })
@@ -30,7 +31,7 @@ export class CreateClientDto {
   @Type(() => CommentaireDto)
   commentaires?: CommentaireDto[];
 
-  @IsString() @IsNotEmpty() statut!: ClientStatut;
+  @IsOptional() @IsString() statut?: ClientStatut;
 
   constructor(data?: Partial<CreateClientDto>) {
     if (data) {
@@ -49,7 +50,7 @@ export class UpdateClientDto {
   @IsOptional() @IsString() prenom?: string;
   @IsOptional() @IsString() adresse?: string;
   @IsOptional() @IsEmail({}, { message: "Invalid email address" }) email?: string;
-  @IsString() @IsOptional()
+  @IsOptional() @IsString()
   @Matches(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
     message: "Numéro de téléphone algérien invalide",
   })

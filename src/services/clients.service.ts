@@ -5,7 +5,6 @@ import { ConflictError } from "../utils/errors";
 import { ensureExists, stripNullish } from "../utils/helpers";
 import { ClientFilterDto } from "../dto/client-filter.dto";
 import { createHistoriqueService } from "./historique.service";
-
 import prisma from "../prisma";
 
 export async function createClient(
@@ -16,7 +15,9 @@ export async function createClient(
     const { commentaires, ...clientData } = dto;
 
     const newClient = await prisma.$transaction(async (tx) => {
-      const client = await tx.client.create({ data: clientData });
+      const client = await tx.client.create({
+        data: clientData
+      });
 
       if (commentaires?.length) {
         const commentaireInputs: Prisma.CommentaireCreateManyInput[] =

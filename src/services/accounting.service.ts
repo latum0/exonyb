@@ -1,11 +1,11 @@
 import { Decimal } from "@prisma/client/runtime/library";
-import { CreateAccountingDto, GetAccountingQueryDto, UpdateAccountingDto } from "../dto/accounting.dto";
+import { AccountingTotals, CreateAccountingDto, GetAccountingQueryDto, UpdateAccountingDto } from "../dto/accounting.dto";
 import { AccountingListResponseDto, AccountingResponseDto } from "../dto/response.dto";
 import prisma from "../prisma";
 import { ensureExists, stringToDecimal, stringToDecimalAccounting, stripNullish } from "../utils/helpers";
 import { createHistoriqueService } from "./historique.service";
 import { Prisma } from "@prisma/client";
-import { contains } from "class-validator";
+import { IntervalDateDto } from "../dto/BaseFilter.dto";
 
 function payloadAccounting(
     id: number,
@@ -179,7 +179,7 @@ export async function getAllAccounting(q: GetAccountingQueryDto): Promise<Servic
         if (maxTotalNum !== undefined) where.total.lte = maxTotalNum;
     }
     if (q.search) {
-        where.commentaire = { contains: String(q.search).trim(), mode: "insensitive" as const };
+        where.commentaire = { contains: String(q.search).trim() };
     }
     const skip = (page - 1) * limit
 
@@ -212,3 +212,71 @@ export async function getAllAccounting(q: GetAccountingQueryDto): Promise<Servic
     return { statusCode: 200, data: { accountings, totalPages, total, page, limit } }
 
 }
+
+export class AccountingGetResponse {
+    totalData!: AccountingTotals;
+    dateFrom!: string | null;
+    dateTo!: string | null;
+
+}
+
+
+
+export async function getAccountingsByDate(
+    date: IntervalDateDto
+): Promise<ServiceResponse<AccountingGetResponse>> {
+    const where: any = {};
+
+    const payload: AccountingTotals = {
+        achatProduitsTotal: "0.00",
+        adsTotal: "0.00",
+        emballageTotal: "0.00",
+        abonnementTelTotal: "0.00",
+        autreTotal: "0.00",
+        salairesTotal: "0.00",
+        totalDate: "0.00",
+    };
+
+    if (date?.dateFrom || date?.dateTo) {
+        where.createdAt = {};
+        if (date.dateFrom) {
+            where.createdAt.gte = date.dateFrom;
+        }
+        if (date.dateTo) {
+            where.createdAt.lte = date.dateTo;
+        }
+    }
+
+    const accountings = await prisma.accounting.aggregate({
+        where,
+        _sum: {
+            achatProduits: true,
+            ads: true,
+            emballage: true,
+            abonnementTel: true,
+            autre: true,
+            salaires: true,
+            total: true,
+        },
+    });
+
+    payload.achatProduitsTotal = accountings._sum.achatProduits?.toString() ?? "0.00";
+    payload.adsTotal = accountings._sum.ads?.toString() ?? "0.00";
+    payload.emballageTotal = accountings._sum.emballage?.toString() ?? "0.00";
+    payload.abonnementTelTotal = accountings._sum.abonnementTel?.toString() ?? "0.00";
+    payload.autreTotal = accountings._sum.autre?.toString() ?? "0.00";
+    payload.salairesTotal = accountings._sum.salaires?.toString() ?? "0.00";
+    payload.totalDate = accountings._sum.total?.toString() ?? "0.00";
+
+    return {
+        statusCode: 200,
+        data: {
+            totalData: payload,
+            dateFrom: date.dateFrom ? String(date.dateFrom) : "",
+            dateTo: date?.dateTo ? String(date.dateTo) : "",
+        },
+
+    };
+}
+
+
