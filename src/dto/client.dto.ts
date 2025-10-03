@@ -14,10 +14,10 @@ import { ClientStatut } from "@prisma/client";
 
 export class CreateClientDto {
 
-  @IsOptional() @IsString() nom?: string;
-  @IsOptional() @IsString() prenom?: string;
-  @IsOptional() @IsString() adresse?: string;
-  @IsOptional() @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email?: string;
+  @IsOptional() @IsString() nom?: string | null;
+  @IsOptional() @IsString() prenom?: string | null;
+  @IsOptional() @IsString() adresse?: string | null;
+  @IsOptional() @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email?: string | null;
   @IsNotEmpty() @IsString()
   @Matches(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
     message: "Numéro de téléphone algérien invalide",
@@ -29,7 +29,7 @@ export class CreateClientDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CommentaireDto)
-  commentaires?: CommentaireDto[];
+  commentaires?: CommentaireDto[] | null;
 
   @IsOptional() @IsString() statut?: ClientStatut;
 

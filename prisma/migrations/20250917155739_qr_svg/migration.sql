@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `commande` ADD COLUMN `qrSVG` VARCHAR(191) NULL;

@@ -16,6 +16,7 @@ import {
   updateLigneQuantity,
 } from "./ligneCommande.service";
 import { createStockNotificationsIfNeeded } from "./notification.service";
+import QRCode from 'qrcode';
 
 export async function createCommande(
   dto: CreateCommandeDto,
@@ -87,21 +88,35 @@ export async function createCommande(
         );
       }
     }
+    const cmdId = crypto.randomUUID();
+    const base = process.env.BASE_URL
+    const path = `/commandes/${cmdId}`
+    const QRUrl = `${base}${path}`
+
+    const svg = await QRCode.toString(QRUrl, {
+      type: 'svg',
+      errorCorrectionLevel: 'Q',
+      margin: 2,
+      width: 300,
+    });
+
 
     const created = await tx.commande.create({
       data: {
+        idCommande: cmdId,
         dateCommande: dto.dateCommande ?? new Date(),
         statut: dto.statut,
         adresseLivraison: dto.adresseLivraison,
         montantTotal: total.toString(),
         clientId: dto.clientId,
+        qrSVG: svg,
         lignesCommande: {
           create: linesPrepared.map((lp) => ({
             produit: { connect: { idProduit: lp.produitId } },
             quantite: lp.quantite,
             prixUnitaire: lp.prixUnitaireDecimal.toString(),
           })),
-        },
+        }
       },
       include: {
         lignesCommande: true,

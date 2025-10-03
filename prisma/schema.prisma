@@ -83,6 +83,7 @@ model Commande {
   statut           String
   adresseLivraison String
   montantTotal     Decimal  @db.Decimal(12, 2)
+  qrSVG            String?  @db.LongText
 
   client   Client @relation(fields: [clientId], references: [idClient], onDelete: Cascade)
   clientId Int
