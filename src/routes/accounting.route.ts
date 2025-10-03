@@ -7,9 +7,6 @@ import { createAccoutingController, getAccountingsBydatePuppeteerController, get
 import { asyncWrapper } from "../utils/asyncWrapper";
 import { IntervalDateDto } from "../dto/BaseFilter.dto";
 
-
-
-
 const route = Router();
 /**
  * @openapi
@@ -263,7 +260,5 @@ route.post("/report", authMiddleware, requireAdmin, validateDtoClient(IntervalDa
  */
 route.get("/:id", authMiddleware, requireAdmin, asyncWrapper(getByIdAccoutingController))
 route.patch("/:id", authMiddleware, requireAdmin, validateDtoClient(UpdateAccountingDto), asyncWrapper(updateAccoutingController))
-
-
 
 export default route;
