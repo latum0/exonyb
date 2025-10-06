@@ -6,10 +6,65 @@ import { asyncWrapper } from "../utils/asyncWrapper";
 import { validateDtoClient } from "../middlewares/validateDtoClient";
 import { checkPermissions, Permission } from "../middlewares/permissions";
 
-
-
-
 const route = Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LigneResponseDto:
+ *       type: object
+ *       properties:
+ *         idLigne:
+ *           type: integer
+ *           example: 1
+ *         produitId:
+ *           type: string
+ *           format: uuid
+ *           example: "83e7cfd1-b5c9-4ff2-a865-d1557143b10f"
+ *         quantite:
+ *           type: integer
+ *           example: 2
+ *         prixUnitaire:
+ *           type: string
+ *           example: "120.00"
+ *     CommandeResponseDto:
+ *       type: object
+ *       properties:
+ *         idCommande:
+ *           type: string
+ *           format: uuid
+ *           example: "e7a1c2d3-4b5f-6a7b-8c9d-0e1f2a3b4c5d"
+ *         dateCommande:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-08-25T16:40:00.000Z"
+ *         statut:
+ *           type: string
+ *           example: "EN_ATTENTE"
+ *         qrSVG:
+ *           type: string
+ *           nullable: true
+ *           description: "QR code as SVG string (SVG XML content). May be null if not generated."
+ *           example: "<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>...</svg>"
+ *         adresseLivraison:
+ *           type: string
+ *           example: "123 Rue de Paris, Alger"
+ *         montantTotal:
+ *           type: string
+ *           example: "1200.00"
+ *         clientId:
+ *           type: integer
+ *           example: 1
+ *         client:
+ *           type: string
+ *           nullable: true
+ *         ligne:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/LigneResponseDto'
+ */
+
 /**
  * @swagger
  * /commandes:
@@ -322,7 +377,5 @@ route.patch("/:id", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]),
  *         description: Commande non trouvée
  */
 route.patch("/:id/montant", authMiddleware, checkPermissions([Permission.CONFIRMATEUR]), asyncWrapper(updateCommandeMontantController))
-
-
 
 export default route;

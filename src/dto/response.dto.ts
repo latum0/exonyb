@@ -29,6 +29,7 @@ export class CommandeResponseDto {
   idCommande?: string;
   dateCommande?: Date;
   statut!: string;
+  qrSVG?: string | null;
   adresseLivraison!: string;
   montantTotal!: string;
   clientId!: number;

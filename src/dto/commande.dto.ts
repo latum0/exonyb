@@ -16,7 +16,7 @@ import {
     Min,
     ValidateNested,
 } from "class-validator";
-import { CreateLigneCommandeDto, UpdateLigneCommandeDto, UpdateLinePatchDto } from "./ligneCommande.dto";
+import { CreateLigneCommandeDto, UpdateLinePatchDto } from "./ligneCommande.dto";
 import { BaseFilterDto } from "./BaseFilter.dto";
 
 export class CreateCommandeDto {

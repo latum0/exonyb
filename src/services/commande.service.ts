@@ -145,6 +145,7 @@ export async function createCommande(
     idCommande: createdCommande.idCommande,
     dateCommande: createdCommande.dateCommande,
     statut: createdCommande.statut,
+    qrSVG: createdCommande.qrSVG,
     adresseLivraison: createdCommande.adresseLivraison,
     montantTotal: (createdCommande.montantTotal as any)?.toString
       ? (createdCommande.montantTotal as any).toString()
@@ -209,6 +210,7 @@ export async function updateCommandeMontantT(
   const responseDto: CommandeResponseDto = {
     dateCommande: updated.dateCommande,
     adresseLivraison: updated.adresseLivraison,
+    qrSVG: updated.qrSVG,
     statut: updated.statut,
     montantTotal: updated.montantTotal.toString(),
     idCommande: updated.idCommande,
@@ -355,6 +357,7 @@ export async function getCommandeById(
     idCommande: commande.idCommande,
     dateCommande: commande.dateCommande,
     statut: commande.statut,
+    qrSVG: commande.qrSVG,
     adresseLivraison: commande.adresseLivraison,
     montantTotal: commande.montantTotal.toString(),
     clientId: commande.clientId,
@@ -444,6 +447,7 @@ export async function getCommandes(
     idCommande: c.idCommande,
     dateCommande: c.dateCommande,
     statut: c.statut,
+    qrSVG: c.qrSVG,
     adresseLivraison: c.adresseLivraison,
     montantTotal: c.montantTotal != null ? String(c.montantTotal) : "0",
     clientId: c.clientId,
