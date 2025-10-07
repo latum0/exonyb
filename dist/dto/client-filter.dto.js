@@ -10,41 +10,32 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientFilterDto = void 0;
+const class_transformer_1 = require("class-transformer");
+const mapped_types_1 = require("@nestjs/mapped-types");
 const class_validator_1 = require("class-validator");
 const BaseFilter_dto_1 = require("./BaseFilter.dto");
-const client_1 = require("@prisma/client");
-class ClientFilterDto extends BaseFilter_dto_1.BaseFilterDto {
+const client_dto_1 = require("./client.dto");
+class ClientFilterDto extends (0, mapped_types_1.IntersectionType)(BaseFilter_dto_1.BaseFilterDto, (0, mapped_types_1.PartialType)(client_dto_1.UpdateClientDto)) {
 }
 exports.ClientFilterDto = ClientFilterDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ClientFilterDto.prototype, "nom", void 0);
+], ClientFilterDto.prototype, "sort", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ClientFilterDto.prototype, "prenom", void 0);
+], ClientFilterDto.prototype, "phonePrefix", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ClientFilterDto.prototype, "adresse", void 0);
+], ClientFilterDto.prototype, "cursorNom", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEmail)(),
-    __metadata("design:type", String)
-], ClientFilterDto.prototype, "email", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.Matches)(/^\+?\d{7,15}$/, {
-        message: 'numeroTelephone must be a valid phone number',
-    }),
-    __metadata("design:type", String)
-], ClientFilterDto.prototype, "numeroTelephone", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(client_1.ClientStatut),
-    __metadata("design:type", String)
-], ClientFilterDto.prototype, "statut", void 0);
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], ClientFilterDto.prototype, "cursorId", void 0);

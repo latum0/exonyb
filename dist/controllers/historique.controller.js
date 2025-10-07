@@ -30,6 +30,6 @@ async function deleteHistoriqueByIdController(req, res, next) {
     res.status(statusCode).json({ message });
 }
 async function deleteOldHistoriquesController(req, res, next) {
-    const result = await (0, historique_service_1.deleteOldHistoriques)();
-    res.status(200).json({ deleted: result.count });
+    const { statusCode, message } = await (0, historique_service_1.deleteAllHistorique)();
+    res.status(statusCode).json({ message });
 }

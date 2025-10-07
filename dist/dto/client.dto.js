@@ -26,28 +26,29 @@ class CreateClientDto {
 }
 exports.CreateClientDto = CreateClientDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "nom", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "prenom", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], CreateClientDto.prototype, "adresse", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEmail)({}, { message: "Invalid email adderss" }),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
+    __metadata("design:type", Object)
 ], CreateClientDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
         message: "Numéro de téléphone algérien invalide",
     }),
@@ -59,11 +60,11 @@ __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
     (0, class_transformer_1.Type)(() => commentaire_dto_1.CommentaireDto),
-    __metadata("design:type", Array)
+    __metadata("design:type", Object)
 ], CreateClientDto.prototype, "commentaires", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateClientDto.prototype, "statut", void 0);
 class UpdateClientDto {
@@ -98,8 +99,8 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateClientDto.prototype, "email", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.Matches)(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
         message: "Numéro de téléphone algérien invalide",
     }),

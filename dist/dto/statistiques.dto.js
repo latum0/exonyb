@@ -9,48 +9,52 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IntervalDateDto = exports.BaseFilterDto = void 0;
+exports.StatistiquesRetourDto = exports.StatistiquesClientDto = exports.StatistiquesCommandeDto = exports.BaseStatDto = void 0;
 const class_validator_1 = require("class-validator");
-class BaseFilterDto {
+class BaseStatDto {
 }
-exports.BaseFilterDto = BaseFilterDto;
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], BaseFilterDto.prototype, "page", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], BaseFilterDto.prototype, "perPage", void 0);
+exports.BaseStatDto = BaseStatDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], BaseFilterDto.prototype, "dateFrom", void 0);
+], BaseStatDto.prototype, "dateFrom", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
-], BaseFilterDto.prototype, "dateTo", void 0);
+], BaseStatDto.prototype, "dateTo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], BaseStatDto.prototype, "denominatorPeriodStart", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], BaseStatDto.prototype, "denominatorPeriodEnd", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], BaseFilterDto.prototype, "search", void 0);
-class IntervalDateDto {
+], BaseStatDto.prototype, "produitId", void 0);
+class StatistiquesCommandeDto extends BaseStatDto {
 }
-exports.IntervalDateDto = IntervalDateDto;
+exports.StatistiquesCommandeDto = StatistiquesCommandeDto;
+class StatistiquesClientDto extends BaseStatDto {
+}
+exports.StatistiquesClientDto = StatistiquesClientDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], IntervalDateDto.prototype, "dateFrom", void 0);
+], StatistiquesClientDto.prototype, "commandeId", void 0);
+class StatistiquesRetourDto extends BaseStatDto {
+}
+exports.StatistiquesRetourDto = StatistiquesRetourDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], IntervalDateDto.prototype, "dateTo", void 0);
+], StatistiquesRetourDto.prototype, "clientId", void 0);

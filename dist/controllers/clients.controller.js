@@ -7,8 +7,6 @@ exports.getClientByIdController = getClientByIdController;
 exports.updateClientController = updateClientController;
 exports.deleteClientController = deleteClientController;
 const clients_service_1 = require("../services/clients.service");
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
 async function createClientController(req, res, next) {
     const dto = req.body;
     const userId = req.user.sub;

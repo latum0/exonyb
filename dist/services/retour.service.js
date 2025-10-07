@@ -15,7 +15,7 @@ const errors_1 = require("../utils/errors");
 const helpers_1 = require("../utils/helpers");
 async function createRetour(data, utilisateurId) {
     await (0, helpers_1.ensureExists)(() => prisma_1.default.commande.findUnique({ where: { idCommande: data.commandeId } }), "Order");
-    await (0, helpers_1.ensureUnique)(() => prisma_1.default.retour.findUnique({ where: { commandeId: data.commandeId } }), "Return for this order");
+    await (0, helpers_1.ensureUnique)(() => prisma_1.default.retour.findUnique({ where: { commandeId: data.commandeId } }), "Retour");
     try {
         const newRetour = await prisma_1.default.$transaction(async (tx) => {
             const created = await tx.retour.create({
@@ -26,6 +26,7 @@ async function createRetour(data, utilisateurId) {
                     commande: { connect: { idCommande: data.commandeId } },
                 },
             });
+            await tx.commande.update({ where: { idCommande: data.commandeId }, data: { statut: "RETORNÉE" } });
             await (0, historique_service_1.createHistoriqueService)(tx, utilisateurId, `Création du retour pour commande ID=${data.commandeId}`);
             return created;
         });
@@ -99,7 +100,7 @@ async function updateRetour(id, data, utilisateurId) {
     }
     const stripData = (0, helpers_1.stripNullish)(data);
     const updatedRetour = await prisma_1.default.$transaction(async (tx) => {
-        const before = await tx.retour.findUnique({ where: { idRetour: id } });
+        await tx.retour.findUnique({ where: { idRetour: id } });
         const retour = await tx.retour.update({
             where: { idRetour: id },
             data: { ...stripData },
@@ -109,10 +110,11 @@ async function updateRetour(id, data, utilisateurId) {
     });
     return { statusCode: 200, data: updatedRetour };
 }
-async function deleteRetour(id, utilisateurId) {
-    await (0, helpers_1.ensureExists)(() => prisma_1.default.retour.findUnique({ where: { idRetour: id } }), "Retour");
+async function deleteRetour(idRetour, utilisateurId) {
+    const retour = await (0, helpers_1.ensureExists)(() => prisma_1.default.retour.findUnique({ where: { idRetour } }), "Retour");
     await prisma_1.default.$transaction(async (tx) => {
-        const deleted = await tx.retour.delete({ where: { idRetour: id } });
+        const deleted = await tx.retour.delete({ where: { idRetour } });
+        await tx.commande.update({ where: { idCommande: retour.commandeId }, data: { statut: "EN ATTENTE" } });
         await (0, historique_service_1.createHistoriqueService)(tx, utilisateurId, `Suppression du retour ID=${deleted.idRetour}`);
     });
     return { statusCode: 200, message: "Retour supprimé avec succès." };

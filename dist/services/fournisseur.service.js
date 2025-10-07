@@ -24,7 +24,7 @@ async function createFournisseur(data, utilisateurId) {
             const foundIds = foundProducts.map((p) => p.idProduit);
             const missing = produitIds.filter((id) => !foundIds.includes(id));
             if (missing.length > 0) {
-                throw new errors_1.NotFoundError("Produit", `The following product IDs do not exist: ${missing.join(", ")}`);
+                throw new errors_1.NotFoundError("Produit", `Les identifiants de produit suivants n’existent pas : ${missing.join(", ")}`);
             }
         }
         const result = await prisma_1.default.$transaction(async (tx) => {

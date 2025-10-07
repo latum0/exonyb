@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChangePasswordDto = exports.ForgotPasswordDto = exports.LoginDto = void 0;
+exports.UpdateProfileDto = exports.ChangePasswordDto = exports.ForgotPasswordDto = exports.LoginDto = void 0;
 const class_validator_1 = require("class-validator");
 /**
  * @swagger
@@ -70,3 +70,24 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], ChangePasswordDto.prototype, "newPassword", void 0);
+class UpdateProfileDto {
+}
+exports.UpdateProfileDto = UpdateProfileDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^(\+213|0)(5|6|7)[0-9]{8}$/, {
+        message: "Numéro de téléphone algérien invalide",
+    }),
+    __metadata("design:type", String)
+], UpdateProfileDto.prototype, "phone", void 0);

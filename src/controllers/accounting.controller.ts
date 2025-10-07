@@ -3,7 +3,6 @@ import { BadRequestError } from "../utils/errors";
 import { CreateAccountingDto, UpdateAccountingDto } from "../dto/accounting.dto";
 import { createAccounting, getAccountingById, getAccountingsByDate, getAllAccounting, updateAccounting } from "../services/accounting.service";
 import * as puppeteer from "puppeteer"
-import PDFDocument from "pdfkit";
 import { htmlPdf } from "../utils/helpers";
 
 export async function createAccoutingController(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -50,7 +49,6 @@ export async function getAccountingsBydatePuppeteerController(
   res: Response,
   next: NextFunction
 ) {
-  console.log("controller")
   let browser: puppeteer.Browser | null = null;
 
   const dateDto = req.body;

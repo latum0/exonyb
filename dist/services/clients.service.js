@@ -18,7 +18,9 @@ async function createClient(dto, utilisateurId) {
     try {
         const { commentaires, ...clientData } = dto;
         const newClient = await prisma_1.default.$transaction(async (tx) => {
-            const client = await tx.client.create({ data: clientData });
+            const client = await tx.client.create({
+                data: clientData
+            });
             if (commentaires?.length) {
                 const commentaireInputs = commentaires.map((c) => ({
                     contenu: c.contenu,
@@ -43,8 +45,7 @@ async function createClient(dto, utilisateurId) {
 }
 async function getAllClients(filter = {}) {
     const perPage = filter.perPage ? parseInt(filter.perPage) : 25;
-    const page = filter.page ? parseInt(filter.page) : 1;
-    const skip = (page - 1) * perPage;
+    const page = Math.max(1, Math.floor(filter.page ?? 1));
     const baseWhere = {};
     if (filter.nom)
         baseWhere.nom = filter.nom;
@@ -54,15 +55,20 @@ async function getAllClients(filter = {}) {
         baseWhere.adresse = filter.adresse;
     if (filter.email)
         baseWhere.email = filter.email;
-    if (filter.numeroTelephone)
+    if (filter.phonePrefix) {
+        baseWhere.numeroTelephone = { startsWith: filter.phonePrefix };
+    }
+    else if (filter.numeroTelephone) {
         baseWhere.numeroTelephone = filter.numeroTelephone;
+    }
     if (filter.search) {
+        const s = String(filter.search);
         baseWhere.OR = [
-            { nom: { contains: filter.search } },
-            { prenom: { contains: filter.search } },
-            { adresse: { contains: filter.search } },
-            { email: { contains: filter.search } },
-            { numeroTelephone: { contains: filter.search } },
+            { nom: { contains: s, mode: "insensitive" } },
+            { prenom: { contains: s, mode: "insensitive" } },
+            { adresse: { contains: s, mode: "insensitive" } },
+            { email: { contains: s, mode: "insensitive" } },
+            { numeroTelephone: { contains: s } },
         ];
     }
     const statutCondition = filter.statut
@@ -72,37 +78,39 @@ async function getAllClients(filter = {}) {
         ...baseWhere,
         statut: statutCondition,
     };
+    const skip = (page - 1) * perPage;
     try {
-        const [total, clients] = await Promise.all([
+        const [count, client] = await Promise.all([
             prisma_1.default.client.count({ where }),
             prisma_1.default.client.findMany({
                 where,
-                skip,
                 take: perPage,
-                orderBy: { nom: "asc" },
+                skip,
+                orderBy: [{ nom: "asc" }, { idClient: "asc" }],
                 include: {
                     commentaires: {
                         take: 5,
                         orderBy: { dateCreated: "desc" },
                     },
                 },
-            }),
+            })
         ]);
+        const nextPage = client.length === perPage ? page + 1 : null;
         return {
             statusCode: 200,
             data: {
-                data: clients,
+                data: client,
                 meta: {
-                    total,
-                    page,
                     perPage,
-                    totalPages: Math.ceil(total / perPage),
+                    page,
+                    nextPage,
+                    total: count,
                 },
             },
         };
     }
     catch (e) {
-        console.error("Error in getAllClients:", e);
+        console.error("Error in getAllClientsKeyset:", e);
         throw e;
     }
 }
@@ -182,6 +190,6 @@ async function deleteClient(id, utilisateurId) {
     });
     return {
         statusCode: 200,
-        message: "Client deleted successfully.",
+        message: "Client supprimé avec succès.",
     };
 }

@@ -9,6 +9,7 @@ const prisma_1 = __importDefault(require("../prisma"));
 const crypto_1 = __importDefault(require("crypto"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const notification_service_1 = require("./notification.service");
 class HttpError extends Error {
     constructor(message, statusCode = 400) {
         super(message);
@@ -56,12 +57,15 @@ async function createProduitService(data, images, fournisseurs = [], utilisateur
             },
         },
     });
-    await prisma_1.default.historique.create({
-        data: {
-            dateModification: new Date(),
-            descriptionAction: `Création du produit ${produit.nom}`,
-            utilisateurId,
-        },
+    await prisma_1.default.$transaction(async (tx) => {
+        await prisma_1.default.historique.create({
+            data: {
+                dateModification: new Date(),
+                descriptionAction: `Création du produit ${produit.nom}`,
+                utilisateurId,
+            },
+        });
+        await (0, notification_service_1.createStockNotificationsIfNeeded)(tx, [produit.idProduit]);
     });
     return produit;
 }
@@ -231,6 +235,7 @@ const updateProduit = async (id, data, files = [], utilisateurId) => {
     else {
     }
     const updatedProduit = await prisma_1.default.$transaction(async (tx) => {
+        const prevProduit = await tx.produit.findUnique({ where: { idProduit: id }, select: { stock: true } });
         const updated = await tx.produit.update({
             where: { idProduit: id },
             data: {
@@ -252,6 +257,26 @@ const updateProduit = async (id, data, files = [], utilisateurId) => {
                 fournisseurs: true,
             },
         });
+        if (data.stock !== undefined) {
+            const prevStock = prevProduit?.stock ?? produit.stock;
+            const newStock = updated.stock;
+            if (prevStock === 0 && newStock > 0) {
+                try {
+                    await (0, notification_service_1.restockNotification)(tx, [id]);
+                }
+                catch (err) {
+                    console.error("Failed to resolve restock notifications for produit", id, err);
+                }
+            }
+            if (prevStock > 0 && newStock === 0) {
+                try {
+                    await (0, notification_service_1.createStockNotificationsIfNeeded)(tx, [id]);
+                }
+                catch (err) {
+                    console.error("Failed to resolve restock notifications for produit", id, err);
+                }
+            }
+        }
         return updated;
     });
     await prisma_1.default.historique.create({

@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authMiddleware_1 = require("../middlewares/authMiddleware");
-const requireAdmin_1 = require("../middlewares/requireAdmin");
 const retour_dto_1 = require("../dto/retour.dto");
 const retour_controller_1 = require("../controllers/retour.controller");
 const asyncWrapper_1 = require("../utils/asyncWrapper");
@@ -178,7 +177,9 @@ router.get("/", authMiddleware_1.authMiddleware,
  *       '403':
  *         description: Accès interdit
  */
-router.post("/filter", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, validateDtoClient_1.validateDtoClient)(retour_filter_dto_1.RetourFilterDto), (0, asyncWrapper_1.asyncWrapper)(retour_controller_1.filterRetoursController));
+router.post("/filter", authMiddleware_1.authMiddleware, 
+//@ts-ignore
+(0, permissions_1.checkPermissions)([client_1.Permission.SAV, client_1.Permission.AGENT_DE_STOCK]), (0, validateDtoClient_1.validateDtoClient)(retour_filter_dto_1.RetourFilterDto), (0, asyncWrapper_1.asyncWrapper)(retour_controller_1.filterRetoursController));
 /**
  * @swagger
  * /retours/{id}:

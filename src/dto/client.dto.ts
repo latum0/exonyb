@@ -14,8 +14,8 @@ import { ClientStatut } from "@prisma/client";
 
 export class CreateClientDto {
 
-  @IsOptional() @IsString() nom?: string | null;
-  @IsOptional() @IsString() prenom?: string | null;
+  @IsNotEmpty() @IsString() nom!: string;
+  @IsNotEmpty() @IsString() prenom!: string;
   @IsOptional() @IsString() adresse?: string | null;
   @IsOptional() @IsEmail({}, { message: "Invalid email adderss" }) @IsOptional() email?: string | null;
   @IsNotEmpty() @IsString()

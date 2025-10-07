@@ -7,6 +7,7 @@ const requireAdmin_1 = require("../middlewares/requireAdmin");
 const fournisseur_dto_1 = require("../dto/fournisseur.dto");
 const asyncWrapper_1 = require("../utils/asyncWrapper");
 const validateDtoClient_1 = require("../middlewares/validateDtoClient");
+const permissions_1 = require("../middlewares/permissions");
 const router = (0, express_1.Router)();
 /**
  * @swagger
@@ -194,7 +195,7 @@ router.patch("/:id", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmi
  *       '403':
  *         description: Accès interdit (droits insuffisants)
  */
-router.get("/", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, asyncWrapper_1.asyncWrapper)(fournisseur_controller_1.getAllFournisseurController));
+router.get("/", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.AGENT_DE_STOCK]), (0, asyncWrapper_1.asyncWrapper)(fournisseur_controller_1.getAllFournisseurController));
 /**
  * @swagger
  * /fournisseurs/{id}:
@@ -253,7 +254,7 @@ router.get("/", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0
  *       '404':
  *         description: Fournisseur non trouvé
  */
-router.get("/:id", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, asyncWrapper_1.asyncWrapper)(fournisseur_controller_1.getFournisseurByIdController));
+router.get("/:id", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.AGENT_DE_STOCK]), (0, asyncWrapper_1.asyncWrapper)(fournisseur_controller_1.getFournisseurByIdController));
 /**
  * @swagger
  * /fournisseurs/{id}:

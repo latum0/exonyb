@@ -11,6 +11,7 @@ const helpers_1 = require("../utils/helpers");
 const client_1 = require("@prisma/client");
 const historique_service_1 = require("./historique.service");
 const prisma_1 = __importDefault(require("../prisma"));
+const commande_service_1 = require("./commande.service");
 async function addToBlacklist(id, utilisateurId) {
     const client = await (0, helpers_1.ensureExists)(() => prisma_1.default.client.findUnique({ where: { idClient: id } }), "Client");
     if (client.statut === client_1.ClientStatut.BLACKLISTED) {
@@ -21,6 +22,7 @@ async function addToBlacklist(id, utilisateurId) {
             where: { idClient: id },
             data: { statut: client_1.ClientStatut.BLACKLISTED },
         });
+        await (0, commande_service_1.updateCommandeStatut)(tx, id, "BLACKLISTED");
         await (0, historique_service_1.createHistoriqueService)(tx, utilisateurId, `Ajout du client ${updated.nom} ${updated.prenom} à la liste noire`);
         return updated;
     });
@@ -33,13 +35,14 @@ async function addToBlacklist(id, utilisateurId) {
 async function deleteFromBlacklist(id, utilisateurId) {
     const client = await (0, helpers_1.ensureExists)(() => prisma_1.default.client.findUnique({ where: { idClient: id } }), "Client");
     if (client.statut === client_1.ClientStatut.ACTIVE) {
-        return { statusCode: 409, message: "Client already active" };
+        return { statusCode: 409, message: "Le client est déjà actif." };
     }
     const activated = await prisma_1.default.$transaction(async (tx) => {
         const updated = await tx.client.update({
             where: { idClient: id },
             data: { statut: client_1.ClientStatut.ACTIVE },
         });
+        await (0, commande_service_1.updateCommandeStatut)(tx, id, "EN ATTENTE");
         await (0, historique_service_1.createHistoriqueService)(tx, utilisateurId, `Suppression du client ${updated.nom}  ${updated.prenom} de la liste noire`);
         return updated;
     });
@@ -58,12 +61,12 @@ async function getAllBlacklistedClients(opts) {
         orderBy: { nom: "asc" },
         include: { commentaires: true },
     });
-    return { statusCode: 200, data: list, message: "List of the blacklist." };
+    return { statusCode: 200, data: list, message: "Liste des clients en liste noire." };
 }
 async function getBlacklistedClientById(id) {
     const blacklistedClient = await (0, helpers_1.ensureExists)(() => prisma_1.default.client.findUnique({
         where: { idClient: id, statut: client_1.ClientStatut.BLACKLISTED },
         include: { commentaires: true },
-    }), "Blacklisted client");
+    }), "Client sur liste noire");
     return { statusCode: 200, data: blacklistedClient };
 }

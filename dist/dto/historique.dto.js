@@ -20,8 +20,8 @@ __decorate([
     __metadata("design:type", Date)
 ], CreateHistoriqueDto.prototype, "dateModification", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], CreateHistoriqueDto.prototype, "acteur", void 0);
 __decorate([

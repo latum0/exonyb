@@ -48,6 +48,8 @@ export async function createClient(
     throw err;
   }
 }
+
+
 export async function getAllClients(filter: ClientFilterDto = {}) {
   const perPage = filter.perPage ? parseInt(filter.perPage as any) : 25;
   const page = Math.max(1, Math.floor(filter.page ?? 1));
@@ -85,8 +87,6 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
     statut: statutCondition,
   };
 
-
-
   const skip = (page - 1) * perPage;
 
   try {
@@ -106,9 +106,7 @@ export async function getAllClients(filter: ClientFilterDto = {}) {
       })
     ])
 
-
     const nextPage = client.length === perPage ? page + 1 : null;
-
     return {
       statusCode: 200,
       data: {

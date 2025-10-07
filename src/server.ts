@@ -27,11 +27,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );
+
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/clients", clientsRoutes);
@@ -44,6 +45,16 @@ app.use("/notifications", notifRoutes);
 app.use("/produits", produitsRoutes);
 app.use("/statistiques", statistiquesRoutes);
 app.use("/accountings", accountingRoutes)
+
+app.use(((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://exonyf.onrender.com");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
+  if (req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+}) as express.RequestHandler);
 
 
 app.use("/public", express.static(path.join(__dirname, "..", "public")));

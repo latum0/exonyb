@@ -8,6 +8,7 @@ exports.getHistoriqueById = getHistoriqueById;
 exports.getAllHistoriques = getAllHistoriques;
 exports.deleteOldHistoriques = deleteOldHistoriques;
 exports.deleteHistoriqueById = deleteHistoriqueById;
+exports.deleteAllHistorique = deleteAllHistorique;
 const helpers_1 = require("../utils/helpers");
 const prisma_1 = __importDefault(require("../prisma"));
 async function createHistoriqueService(tx, utilisateurId, descriptionAction) {
@@ -18,11 +19,21 @@ async function createHistoriqueService(tx, utilisateurId, descriptionAction) {
             dateModification,
             descriptionAction,
             utilisateurId,
+            acteur: user.name,
         },
     });
 }
 async function getHistoriqueById(id) {
-    const historique = await (0, helpers_1.ensureExists)(() => prisma_1.default.historique.findUnique({ where: { idHistorique: id } }), "Historique");
+    const historique = await (0, helpers_1.ensureExists)(() => prisma_1.default.historique.findUnique({
+        where: { idHistorique: id },
+        include: {
+            utilisateur: {
+                select: {
+                    name: true,
+                },
+            },
+        },
+    }), "Historique");
     return { statusCode: 200, data: historique };
 }
 async function getAllHistoriques(filters = {}) {
@@ -103,7 +114,7 @@ async function deleteOldHistoriques() {
 async function deleteHistoriqueById(id, utilisateurId) {
     await (0, helpers_1.ensureExists)(() => prisma_1.default.historique.findUnique({ where: { idHistorique: id } }), "Historique");
     await prisma_1.default.$transaction(async (tx) => {
-        const deleted = await tx.historique.delete({
+        await tx.historique.delete({
             where: { idHistorique: id },
         });
     });
@@ -111,4 +122,8 @@ async function deleteHistoriqueById(id, utilisateurId) {
         statusCode: 200,
         message: "Historique supprimé avec succès.",
     };
+}
+async function deleteAllHistorique() {
+    await prisma_1.default.historique.deleteMany();
+    return { statusCode: 200, message: "historique supprimé" };
 }

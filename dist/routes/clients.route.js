@@ -4,7 +4,6 @@ const express_1 = require("express");
 const authMiddleware_1 = require("../middlewares/authMiddleware");
 const validateDtoClient_1 = require("../middlewares/validateDtoClient");
 const client_dto_1 = require("../dto/client.dto");
-const requireAdmin_1 = require("../middlewares/requireAdmin");
 const clients_controller_1 = require("../controllers/clients.controller");
 const liste_noire_controller_1 = require("../controllers/liste-noire.controller");
 const permissions_1 = require("../middlewares/permissions");
@@ -139,7 +138,7 @@ router.get("/blacklist", authMiddleware_1.authMiddleware,
  *       404:
  *         description: Client blacklisté non trouvé
  */
-router.get("/blacklist/:id", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, asyncWrapper_1.asyncWrapper)(liste_noire_controller_1.getBlacklistedClientsByIdController));
+router.get("/blacklist/:id", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.SAV]), (0, asyncWrapper_1.asyncWrapper)(liste_noire_controller_1.getBlacklistedClientsByIdController));
 /**
  * @swagger
  * /clients:
@@ -258,7 +257,7 @@ router.get("/blacklist/:id", authMiddleware_1.authMiddleware, requireAdmin_1.req
  */
 router.post("/", authMiddleware_1.authMiddleware, 
 //@ts-ignore
-(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV]), (0, validateDtoClient_1.validateDtoClient)(client_dto_1.CreateClientDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.createClientController));
+(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV, permissions_1.Permission.CONFIRMATEUR]), (0, validateDtoClient_1.validateDtoClient)(client_dto_1.CreateClientDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.createClientController));
 /**
  * @swagger
  * /clients:
@@ -383,7 +382,7 @@ router.post("/", authMiddleware_1.authMiddleware,
  *       403:
  *         description: Accès interdit (permissions insuffisantes)
  */
-router.get("/", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.getAllClientsController));
+router.get("/", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.SAV, permissions_1.Permission.CONFIRMATEUR]), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.getAllClientsController));
 /**
  * @swagger
  * /clients/filter:
@@ -500,7 +499,7 @@ router.get("/", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0
  *       '403':
  *         description: Accès interdit (droits insuffisants)
  */
-router.post("/filter", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, validateDtoClient_1.validateDtoClient)(client_filter_dto_1.ClientFilterDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.filterClientsController));
+router.post("/filter", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.SAV, permissions_1.Permission.CONFIRMATEUR]), (0, validateDtoClient_1.validateDtoClient)(client_filter_dto_1.ClientFilterDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.filterClientsController));
 /**
  * @swagger
  * /clients/{id}:
@@ -575,7 +574,7 @@ router.post("/filter", authMiddleware_1.authMiddleware, requireAdmin_1.requireAd
  *       404:
  *         description: Client non trouvé
  */
-router.get("/:id", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin, (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.getClientByIdController));
+router.get("/:id", authMiddleware_1.authMiddleware, (0, permissions_1.checkPermissions)([permissions_1.Permission.SAV, permissions_1.Permission.CONFIRMATEUR]), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.getClientByIdController));
 /**
  * @swagger
  * /clients/{id}:
@@ -693,7 +692,7 @@ router.get("/:id", authMiddleware_1.authMiddleware, requireAdmin_1.requireAdmin,
  */
 router.patch("/:id", authMiddleware_1.authMiddleware, 
 //@ts-ignore
-(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV]), (0, validateDtoClient_1.validateDtoClient)(client_dto_1.UpdateClientDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.updateClientController));
+(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV], [permissions_1.Permission.CONFIRMATEUR]), (0, validateDtoClient_1.validateDtoClient)(client_dto_1.UpdateClientDto), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.updateClientController));
 /**
  * @swagger
  * /clients/{id}:
@@ -722,7 +721,7 @@ router.patch("/:id", authMiddleware_1.authMiddleware,
  */
 router.delete("/:id", authMiddleware_1.authMiddleware, 
 //@ts-ignore
-(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV]), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.deleteClientController));
+(0, permissions_1.checkPermissions)([permissions_1.Permission.SAV, permissions_1.Permission.CONFIRMATEUR]), (0, asyncWrapper_1.asyncWrapper)(clients_controller_1.deleteClientController));
 /**
  * @swagger
  * /clients/addBlacklist/{id}:

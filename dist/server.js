@@ -14,17 +14,21 @@ const path_1 = __importDefault(require("path"));
 const cors_1 = __importDefault(require("cors"));
 const clients_route_1 = __importDefault(require("./routes/clients.route"));
 const fournisseur_route_1 = __importDefault(require("./routes/fournisseur.route"));
+const statistique_route_1 = __importDefault(require("./routes/statistique.route"));
 const retour_route_1 = __importDefault(require("./routes/retour.route"));
 const historique_route_1 = __importDefault(require("./routes/historique.route"));
+const commande_route_1 = __importDefault(require("./routes/commande.route"));
+const ligneCommande_route_1 = __importDefault(require("./routes/ligneCommande.route"));
+const accounting_route_1 = __importDefault(require("./routes/accounting.route"));
+const notification_route_1 = __importDefault(require("./routes/notification.route"));
+const historiqueCleanup_1 = require("./jobs/historiqueCleanup");
 const produit_route_1 = __importDefault(require("./routes/produit.route"));
-const node_cron_1 = __importDefault(require("node-cron"));
-const historique_service_1 = require("./services/historique.service");
 const error_handler_1 = require("./middlewares/error-handler");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use((0, cors_1.default)({
-    origin: "http://localhost:3000",
+    origin: "https://exonyf.onrender.com",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
 }));
@@ -34,22 +38,17 @@ app.use("/clients", clients_route_1.default);
 app.use("/fournisseurs", fournisseur_route_1.default);
 app.use("/retours", retour_route_1.default);
 app.use("/historiques", historique_route_1.default);
+app.use("/commandes", commande_route_1.default);
+app.use("/lignes", ligneCommande_route_1.default);
+app.use("/notifications", notification_route_1.default);
 app.use("/produits", produit_route_1.default);
+app.use("/statistiques", statistique_route_1.default);
+app.use("/accountings", accounting_route_1.default);
 app.use("/public", express_1.default.static(path_1.default.join(__dirname, "..", "public")));
 app.use("/uploads", express_1.default.static(path_1.default.join(__dirname, "../uploads")));
 app.use("/", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
 app.use(error_handler_1.errorHandler);
-node_cron_1.default.schedule("0 0 * * *", async () => {
-    try {
-        const result = await (0, historique_service_1.deleteOldHistoriques)();
-        if (result.count > 0) {
-            console.log(`Deleted ${result.count} historiques older than 7 days.`);
-        }
-    }
-    catch (err) {
-        console.error("Error running historique cleanup job:", err);
-    }
-});
+(0, historiqueCleanup_1.scheduleHistoriqueCleanup)(process.env.HISTO_CLEANUP_CRON);
 const PORT = process.env.PORT ?? 3001;
 app.listen(PORT, () => {
     console.log(` Server running on http://localhost:${PORT}/`);

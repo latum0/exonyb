@@ -51,8 +51,8 @@ model Historique {
 
 model Client {
   idClient        Int           @id @default(autoincrement())
-  nom             String?
-  prenom          String?
+  nom             String
+  prenom          String
   adresse         String?
   email           String?       @unique
   numeroTelephone String        @unique

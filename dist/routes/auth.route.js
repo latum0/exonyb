@@ -5,6 +5,7 @@ const auth_controller_1 = require("../controllers/auth.controller");
 const auth_dto_1 = require("../dto/auth.dto");
 const validateDto_1 = require("../middlewares/validateDto");
 const authMiddleware_1 = require("../middlewares/authMiddleware");
+const asyncWrapper_1 = require("../utils/asyncWrapper");
 const router = (0, express_1.Router)();
 /**
  * @openapi
@@ -34,12 +35,9 @@ const router = (0, express_1.Router)();
  *       401:
  *         description: Invalid credentials
  */
-router.post(
-  "/login",
-  //@ts-ignore
-  (0, validateDto_1.validateDto)(auth_dto_1.LoginDto),
-  auth_controller_1.loginAdminHandler
-);
+router.post("/login", 
+//@ts-ignore
+(0, validateDto_1.validateDto)(auth_dto_1.LoginDto), auth_controller_1.loginAdminHandler);
 /**
  * @swagger
  * /auth/refresh:
@@ -80,11 +78,9 @@ router.post(
  *                   type: string
  *                   example: Invalid or expired refresh token
  */
-router.post(
-  "/refresh",
-  //@ts-ignore
-  auth_controller_1.refreshToken
-);
+router.post("/refresh", 
+//@ts-ignore
+auth_controller_1.refreshToken);
 /**
  * @openapi
  * /auth/verify-email:
@@ -107,11 +103,9 @@ router.post(
  *       404:
  *         description: Utilisateur introuvable
  */
-router.get(
-  "/verify-email",
-  //@ts-ignore
-  auth_controller_1.verifyEmailController
-);
+router.get("/verify-email", 
+//@ts-ignore
+auth_controller_1.verifyEmailController);
 /**
  * @swagger
  * /auth/forgot-password:
@@ -130,11 +124,7 @@ router.get(
  *       404:
  *         description: Utilisateur non trouvé
  */
-router.post(
-  "/forgot-password",
-  (0, validateDto_1.validateDto)(auth_dto_1.ForgotPasswordDto),
-  auth_controller_1.forgotPassword
-);
+router.post("/forgot-password", (0, validateDto_1.validateDto)(auth_dto_1.ForgotPasswordDto), auth_controller_1.forgotPassword);
 /**
  * @swagger
  * /auth/reset-password:
@@ -179,12 +169,9 @@ router.post("/reset-password", auth_controller_1.resetPasswordController);
  *       401:
  *         description: Non autorisé
  */
-router.post(
-  "/change-password",
-  authMiddleware_1.authMiddleware,
-  //@ts-ignore
-  auth_controller_1.handleChangePassword
-);
+router.post("/change-password", authMiddleware_1.authMiddleware, 
+//@ts-ignore
+auth_controller_1.handleChangePassword);
 /**
  * @swagger
  * /auth/profile:
@@ -203,9 +190,59 @@ router.post(
  *       401:
  *         description: Non autorisé
  */
-router.get(
-  "/profile",
-  authMiddleware_1.authMiddleware,
-  auth_controller_1.getProfile
-);
+router.get("/profile", authMiddleware_1.authMiddleware, auth_controller_1.getProfile);
+/**
+ * @swagger
+ * /auth/profile:
+ *   patch:
+ *     summary: Met à jour le profil de l'utilisateur authentifié
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateProfileDto'
+ *           example:
+ *             name: "Ali Ben"
+ *             email: "ali.ben@example.com"
+ *             phone: "+213612345678"
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Bad request (invalid body)
+ *       401:
+ *         description: Non autorisé
+ *       409:
+ *         description: Conflit (email ou téléphone déjà utilisé)
+ *       422:
+ *         description: Erreur de validation (format email/téléphone invalide)
+ *       500:
+ *         description: Internal server error
+ */
+router.patch("/profile", authMiddleware_1.authMiddleware, (0, validateDto_1.validateDto)(auth_dto_1.UpdateProfileDto), (0, asyncWrapper_1.asyncWrapper)(auth_controller_1.updateProfileController));
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Déconnexion
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *       401:
+ *         description: Non autorisé
+ */
+router.post("/logout", authMiddleware_1.authMiddleware, 
+//@ts-ignore
+auth_controller_1.logoutController);
 exports.default = router;
