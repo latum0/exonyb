@@ -1,5 +1,8 @@
 import "reflect-metadata";
 import express, { Application, Request, Response, NextFunction } from "express";
+
+import dotenv from "dotenv";
+dotenv.config();
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import authRoutes from "./routes/auth.route";
